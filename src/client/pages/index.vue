@@ -6,11 +6,14 @@
       <div class="lg:col-span-2">
         <TransactionForm @submit="handleAddTransaction" />
         <div class="mt-8">
-          <TransactionList :transactions="transactions" />
+          <TransactionList :transactions="filteredTransactions" />
         </div>
       </div>
       <div>
-        <MonthlySummary :summary="monthlySummary" />
+        <MonthlySummary
+          :transactions="transactions"
+          @month-change="handleMonthChange"
+        />
       </div>
     </div>
   </div>
@@ -18,38 +21,20 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { Transaction, MonthlySummary } from "~/types/accounting";
+import type { Transaction } from "~/types/accounting";
 
 const transactions = ref<Transaction[]>([]);
+const selectedMonth = ref(new Date().toISOString().slice(0, 7));
 
-const monthlySummary = computed<MonthlySummary>(() => {
-  const currentMonth = new Date().toISOString().slice(0, 7);
-  const monthTransactions = transactions.value.filter((t) =>
-    t.date.startsWith(currentMonth)
+const filteredTransactions = computed(() => {
+  return transactions.value.filter((t) =>
+    t.date.startsWith(selectedMonth.value)
   );
-
-  const totalIncome = monthTransactions
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const totalExpense = monthTransactions
-    .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + t.amount, 0);
-
-  const categorySummary = monthTransactions
-    .filter((t) => t.type === "expense")
-    .reduce((acc, t) => {
-      acc[t.category] = (acc[t.category] || 0) + t.amount;
-      return acc;
-    }, {} as Record<string, number>);
-
-  return {
-    totalIncome,
-    totalExpense,
-    balance: totalIncome - totalExpense,
-    categorySummary,
-  };
 });
+
+const handleMonthChange = (month: string) => {
+  selectedMonth.value = month;
+};
 
 const handleAddTransaction = (
   transaction: Omit<Transaction, "id" | "createdAt" | "updatedAt">

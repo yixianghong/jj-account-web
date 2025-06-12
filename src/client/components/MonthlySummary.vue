@@ -1,6 +1,23 @@
 <template>
   <div class="monthly-summary">
-    <h2 class="text-xl font-bold mb-4">本月分析</h2>
+    <div class="flex justify-between items-center mb-4">
+      <h2 class="text-xl font-bold">月度分析</h2>
+      <div class="flex items-center space-x-2">
+        <button @click="changeMonth(-1)" class="p-2 rounded hover:bg-gray-100">
+          <span class="text-lg">←</span>
+        </button>
+        <input
+          type="month"
+          v-model="selectedMonth"
+          class="p-2 border rounded"
+          @change="handleMonthChange"
+        />
+        <button @click="changeMonth(1)" class="p-2 rounded hover:bg-gray-100">
+          <span class="text-lg">→</span>
+        </button>
+      </div>
+    </div>
+
     <div class="grid grid-cols-3 gap-4 mb-6">
       <div class="bg-green-100 p-4 rounded">
         <div class="text-sm text-green-800">總收入</div>
@@ -39,9 +56,63 @@
 </template>
 
 <script setup lang="ts">
-import type { MonthlySummary } from "~/types/accounting";
+import type { MonthlySummary, Category } from "~/types/accounting";
+import { CATEGORIES } from "~/types/accounting";
 
-defineProps<{
-  summary: MonthlySummary;
+const props = defineProps<{
+  transactions: Array<{
+    type: "income" | "expense";
+    amount: number;
+    category: Category;
+    date: string;
+  }>;
 }>();
+
+const selectedMonth = ref(new Date().toISOString().slice(0, 7));
+
+const emit = defineEmits<{
+  (e: "monthChange", month: string): void;
+}>();
+
+const handleMonthChange = () => {
+  emit("monthChange", selectedMonth.value);
+};
+
+const changeMonth = (delta: number) => {
+  const [year, month] = selectedMonth.value.split("-").map(Number);
+  const date = new Date(year, month - 1 + delta, 1);
+  selectedMonth.value = date.toISOString().slice(0, 7);
+  handleMonthChange();
+};
+
+const summary = computed<MonthlySummary>(() => {
+  const monthTransactions = props.transactions.filter((t) =>
+    t.date.startsWith(selectedMonth.value)
+  );
+
+  const totalIncome = monthTransactions
+    .filter((t) => t.type === "income")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const totalExpense = monthTransactions
+    .filter((t) => t.type === "expense")
+    .reduce((sum, t) => sum + t.amount, 0);
+
+  const categorySummary = CATEGORIES.reduce((acc, category) => {
+    const amount = monthTransactions
+      .filter((t) => t.type === "expense" && t.category === category)
+      .reduce((sum, t) => sum + t.amount, 0);
+    if (amount > 0) {
+      acc[category] = amount;
+    }
+    return acc;
+  }, {} as Record<Category, number>);
+
+  return {
+    totalIncome,
+    totalExpense,
+    balance: totalIncome - totalExpense,
+    categorySummary,
+  };
+});
 </script>
