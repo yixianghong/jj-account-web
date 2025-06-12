@@ -74,6 +74,7 @@
           <select
             v-model="form.paymentStatus"
             class="w-full p-2 border rounded"
+            :disabled="form.type === 'income'"
           >
             <option value="pending">未請款</option>
             <option value="paid">已請款</option>
@@ -92,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import type {
   Transaction,
   TransactionType,
@@ -117,6 +118,16 @@ const form = ref({
   recorder: "",
   paymentStatus: "pending" as PaymentStatus,
 });
+
+// 當類型變更為收入時，自動設定為已請款
+watch(
+  () => form.value.type,
+  (newType) => {
+    if (newType === "income") {
+      form.value.paymentStatus = "paid";
+    }
+  }
+);
 
 const handleSubmit = () => {
   emit("submit", { ...form.value });

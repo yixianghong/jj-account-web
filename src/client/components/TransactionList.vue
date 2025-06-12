@@ -20,6 +20,7 @@
               {{ transaction.type === "income" ? "收入" : "支出" }}
             </span>
             <button
+              v-if="transaction.type === 'expense'"
               @click="togglePaymentStatus(transaction)"
               :class="[
                 'ml-2 px-2 py-1 rounded text-sm cursor-pointer',
@@ -30,6 +31,12 @@
             >
               {{ transaction.paymentStatus === "paid" ? "已請款" : "未請款" }}
             </button>
+            <span
+              v-else
+              class="ml-2 px-2 py-1 rounded text-sm bg-gray-100 text-gray-800"
+            >
+              已請款
+            </span>
           </div>
           <div class="flex items-center space-x-2">
             <div class="text-lg font-bold">
@@ -86,6 +93,8 @@ const handleDelete = (id: string) => {
 };
 
 const togglePaymentStatus = (transaction: Transaction) => {
+  if (transaction.type === "income") return;
+
   const updatedTransaction = {
     ...transaction,
     paymentStatus: transaction.paymentStatus === "paid" ? "pending" : "paid",

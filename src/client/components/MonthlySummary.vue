@@ -127,9 +127,9 @@ const summary = computed<
     return acc;
   }, {} as Record<Category, number>);
 
-  // 計算每個記帳人的未請款金額
+  // 計算每個記帳人的未請款金額（只統計支出）
   const pendingAmountByRecorder = monthTransactions
-    .filter((t) => t.paymentStatus === "pending")
+    .filter((t) => t.type === "expense" && t.paymentStatus === "pending")
     .reduce((acc, t) => {
       acc[t.recorder] = (acc[t.recorder] || 0) + t.amount;
       return acc;
