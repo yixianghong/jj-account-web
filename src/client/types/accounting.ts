@@ -4,6 +4,8 @@ export type PaymentStatus = "pending" | "paid";
 
 export type Category = "存款" | "購物" | "飲食" | "生活" | "旅遊" | "其他";
 
+export type Recorder = "jason" | "jassica";
+
 export const CATEGORIES: Category[] = [
   "存款",
   "購物",
@@ -13,6 +15,8 @@ export const CATEGORIES: Category[] = [
   "其他",
 ];
 
+export const RECORDERS: Recorder[] = ["jason", "jassica"];
+
 export interface Transaction {
   id: string;
   type: TransactionType;
@@ -20,7 +24,7 @@ export interface Transaction {
   category: Category;
   description: string;
   date: string;
-  recorder: string;
+  recorder: Recorder;
   paymentStatus: PaymentStatus;
   createdAt: string;
   updatedAt: string;

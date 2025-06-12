@@ -40,12 +40,19 @@
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">記帳人</label>
-          <input
-            type="text"
+          <select
             v-model="form.recorder"
             class="w-full p-2 border rounded"
             required
-          />
+          >
+            <option
+              v-for="recorder in RECORDERS"
+              :key="recorder"
+              :value="recorder"
+            >
+              {{ recorder }}
+            </option>
+          </select>
         </div>
       </div>
 
@@ -99,8 +106,9 @@ import type {
   TransactionType,
   PaymentStatus,
   Category,
+  Recorder,
 } from "~/types/accounting";
-import { CATEGORIES } from "~/types/accounting";
+import { CATEGORIES, RECORDERS } from "~/types/accounting";
 
 const emit = defineEmits<{
   (
@@ -115,7 +123,7 @@ const form = ref({
   category: "其他" as Category,
   description: "",
   date: new Date().toISOString().split("T")[0],
-  recorder: "",
+  recorder: "jason" as Recorder,
   paymentStatus: "pending" as PaymentStatus,
 });
 
@@ -138,7 +146,7 @@ const handleSubmit = () => {
     category: "其他",
     description: "",
     date: new Date().toISOString().split("T")[0],
-    recorder: "",
+    recorder: "jason",
     paymentStatus: "pending",
   };
 };
