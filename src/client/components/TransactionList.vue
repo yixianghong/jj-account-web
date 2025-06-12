@@ -77,7 +77,7 @@
 <script setup lang="ts">
 import type { Transaction } from "~/types/accounting";
 
-const props = defineProps<{
+defineProps<{
   transactions: Transaction[];
 }>();
 
@@ -97,7 +97,9 @@ const togglePaymentStatus = (transaction: Transaction) => {
 
   const updatedTransaction = {
     ...transaction,
-    paymentStatus: transaction.paymentStatus === "paid" ? "pending" : "paid",
+    paymentStatus: (transaction.paymentStatus === "paid"
+      ? "pending"
+      : "paid") as "pending" | "paid",
     updatedAt: new Date().toISOString(),
   };
   emit("update", updatedTransaction);

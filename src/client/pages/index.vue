@@ -17,6 +17,7 @@
         <MonthlySummary
           :transactions="transactions"
           @month-change="handleMonthChange"
+          @claim-all="handleClaimAll"
         />
       </div>
     </div>
@@ -25,7 +26,7 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { Transaction } from "~/types/accounting";
+import type { Transaction, Recorder } from "~/types/accounting";
 
 const transactions = ref<Transaction[]>([]);
 const selectedMonth = ref(new Date().toISOString().slice(0, 7));
@@ -68,5 +69,25 @@ const handleUpdateTransaction = (updatedTransaction: Transaction) => {
   if (index !== -1) {
     transactions.value[index] = updatedTransaction;
   }
+};
+
+const handleClaimAll = (recorder: Recorder) => {
+  const updatedTransactions = transactions.value.map((t) => {
+    if (
+      t.type === "expense" &&
+      t.recorder === recorder &&
+      t.paymentStatus === "pending"
+    ) {
+      return {
+        ...t,
+        paymentStatus: "paid" as const,
+        updatedAt: new Date().toISOString(),
+      };
+    }
+    return t;
+  });
+
+  transactions.value = updatedTransactions;
+  localStorage.setItem("transactions", JSON.stringify(updatedTransactions));
 };
 </script>

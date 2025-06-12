@@ -61,7 +61,16 @@
           :key="recorder"
           class="flex justify-between items-center p-2 bg-yellow-50 rounded"
         >
-          <span>{{ recorder }}</span>
+          <div class="flex items-center space-x-2">
+            <span>{{ recorder }}</span>
+            <button
+              v-if="amount > 0"
+              @click="handleClaimAll(recorder as Recorder)"
+              class="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+            >
+              一鍵請領
+            </button>
+          </div>
           <span class="font-medium">{{ amount }}</span>
         </div>
       </div>
@@ -71,16 +80,17 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { MonthlySummary, Category } from "~/types/accounting";
+import type { MonthlySummary, Category, Recorder } from "~/types/accounting";
 import { CATEGORIES } from "~/types/accounting";
 
 const props = defineProps<{
   transactions: Array<{
+    id: string;
     type: "income" | "expense";
     amount: number;
     category: Category;
     date: string;
-    recorder: string;
+    recorder: Recorder;
     paymentStatus: "pending" | "paid";
   }>;
 }>();
@@ -89,6 +99,7 @@ const selectedMonth = ref(new Date().toISOString().slice(0, 7));
 
 const emit = defineEmits<{
   (e: "monthChange", month: string): void;
+  (e: "claimAll", recorder: Recorder): void;
 }>();
 
 const handleMonthChange = () => {
@@ -143,4 +154,10 @@ const summary = computed<
     pendingAmountByRecorder,
   };
 });
+
+const handleClaimAll = (recorder: Recorder) => {
+  if (confirm(`確定要請領 ${recorder} 的所有未請款項目嗎？`)) {
+    emit("claimAll", recorder);
+  }
+};
 </script>
