@@ -52,10 +52,25 @@
         </div>
       </div>
     </div>
+
+    <div class="mt-6">
+      <h3 class="text-lg font-semibold mb-3">未請款金額</h3>
+      <div class="space-y-2">
+        <div
+          v-for="(amount, recorder) in summary.pendingAmountByRecorder"
+          :key="recorder"
+          class="flex justify-between items-center p-2 bg-yellow-50 rounded"
+        >
+          <span>{{ recorder }}</span>
+          <span class="font-medium">{{ amount }}</span>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from "vue";
 import type { MonthlySummary, Category } from "~/types/accounting";
 import { CATEGORIES } from "~/types/accounting";
 
@@ -65,6 +80,8 @@ const props = defineProps<{
     amount: number;
     category: Category;
     date: string;
+    recorder: string;
+    paymentStatus: "pending" | "paid";
   }>;
 }>();
 
@@ -85,7 +102,9 @@ const changeMonth = (delta: number) => {
   handleMonthChange();
 };
 
-const summary = computed<MonthlySummary>(() => {
+const summary = computed<
+  MonthlySummary & { pendingAmountByRecorder: Record<string, number> }
+>(() => {
   const monthTransactions = props.transactions.filter((t) =>
     t.date.startsWith(selectedMonth.value)
   );
@@ -108,11 +127,20 @@ const summary = computed<MonthlySummary>(() => {
     return acc;
   }, {} as Record<Category, number>);
 
+  // 計算每個記帳人的未請款金額
+  const pendingAmountByRecorder = monthTransactions
+    .filter((t) => t.paymentStatus === "pending")
+    .reduce((acc, t) => {
+      acc[t.recorder] = (acc[t.recorder] || 0) + t.amount;
+      return acc;
+    }, {} as Record<string, number>);
+
   return {
     totalIncome,
     totalExpense,
     balance: totalIncome - totalExpense,
     categorySummary,
+    pendingAmountByRecorder,
   };
 });
 </script>

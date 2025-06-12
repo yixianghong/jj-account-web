@@ -6,7 +6,11 @@
       <div class="lg:col-span-2">
         <TransactionForm @submit="handleAddTransaction" />
         <div class="mt-8">
-          <TransactionList :transactions="filteredTransactions" />
+          <TransactionList
+            :transactions="filteredTransactions"
+            @delete="handleDeleteTransaction"
+            @update="handleUpdateTransaction"
+          />
         </div>
       </div>
       <div>
@@ -51,5 +55,18 @@ const handleAddTransaction = (
   transactions.value.sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
   );
+};
+
+const handleDeleteTransaction = (id: string) => {
+  transactions.value = transactions.value.filter((t) => t.id !== id);
+};
+
+const handleUpdateTransaction = (updatedTransaction: Transaction) => {
+  const index = transactions.value.findIndex(
+    (t) => t.id === updatedTransaction.id
+  );
+  if (index !== -1) {
+    transactions.value[index] = updatedTransaction;
+  }
 };
 </script>
