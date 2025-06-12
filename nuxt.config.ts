@@ -25,11 +25,17 @@ export default defineNuxtConfig({
     "@nuxt/fonts",
     "@nuxt/icon",
     "@nuxt/image",
-    "@nuxt/ui",
     "@nuxt/scripts",
+    "@nuxt/ui",
   ],
   css: ["~/assets/css/main.css"],
   image: {
     dir: "assets/imgs",
+  },
+  typescript: {
+    strict: true,
+  },
+  colorMode: {
+    preference: "light",
   },
 });
