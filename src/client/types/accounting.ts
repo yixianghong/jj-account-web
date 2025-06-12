@@ -38,3 +38,11 @@ export interface MonthlySummary {
     [key in Category]?: number;
   };
 }
+
+export interface AccountBook {
+  id: string;
+  name: string;
+  transactions: Transaction[];
+  createdAt: string;
+  updatedAt: string;
+}
