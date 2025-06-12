@@ -2,11 +2,22 @@ export type TransactionType = "income" | "expense";
 
 export type PaymentStatus = "pending" | "paid";
 
+export type Category = "存款" | "購物" | "飲食" | "生活" | "旅遊" | "其他";
+
+export const CATEGORIES: Category[] = [
+  "存款",
+  "購物",
+  "飲食",
+  "生活",
+  "旅遊",
+  "其他",
+];
+
 export interface Transaction {
   id: string;
   type: TransactionType;
   amount: number;
-  category: string;
+  category: Category;
   description: string;
   date: string;
   recorder: string;
@@ -20,6 +31,6 @@ export interface MonthlySummary {
   totalExpense: number;
   balance: number;
   categorySummary: {
-    [key: string]: number;
+    [key in Category]?: number;
   };
 }

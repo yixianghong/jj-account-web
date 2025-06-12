@@ -24,12 +24,19 @@
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">分類</label>
-          <input
-            type="text"
+          <select
             v-model="form.category"
             class="w-full p-2 border rounded"
             required
-          />
+          >
+            <option
+              v-for="category in CATEGORIES"
+              :key="category"
+              :value="category"
+            >
+              {{ category }}
+            </option>
+          </select>
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">記帳人</label>
@@ -90,7 +97,9 @@ import type {
   Transaction,
   TransactionType,
   PaymentStatus,
+  Category,
 } from "~/types/accounting";
+import { CATEGORIES } from "~/types/accounting";
 
 const emit = defineEmits<{
   (
@@ -102,7 +111,7 @@ const emit = defineEmits<{
 const form = ref({
   type: "expense" as TransactionType,
   amount: 0,
-  category: "",
+  category: "其他" as Category,
   description: "",
   date: new Date().toISOString().split("T")[0],
   recorder: "",
@@ -115,7 +124,7 @@ const handleSubmit = () => {
   form.value = {
     type: "expense",
     amount: 0,
-    category: "",
+    category: "其他",
     description: "",
     date: new Date().toISOString().split("T")[0],
     recorder: "",
