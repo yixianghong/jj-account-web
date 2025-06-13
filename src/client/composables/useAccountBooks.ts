@@ -1,22 +1,28 @@
-import { ref } from 'vue';
+import { ref, onUnmounted } from 'vue';
 import type { AccountBook } from '~/types/accounting';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot } from 'firebase/firestore';
 
 export const useAccountBooks = () => {
     const { $firebase } = useNuxtApp();
     const accountBooks = ref<AccountBook[]>([]);
+    let unsubscribe: (() => void) | null = null;
 
-    // 載入記帳本資料
+    // 載入記帳本資料並設定即時監聽
     const loadAccountBooks = async () => {
         try {
             const booksRef = collection($firebase.db, 'accountBooks');
             const q = query(booksRef, orderBy('createdAt', 'desc'));
-            const querySnapshot = await getDocs(q);
 
-            accountBooks.value = querySnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            })) as AccountBook[];
+            // 設定即時監聽
+            unsubscribe = onSnapshot(q, (snapshot) => {
+                accountBooks.value = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                })) as AccountBook[];
+            }, (error) => {
+                console.error('監聽記帳本失敗：', error);
+            });
+
         } catch (error) {
             console.error('載入記帳本失敗：', error);
         }
@@ -32,14 +38,7 @@ export const useAccountBooks = () => {
                 updatedAt: new Date().toISOString(),
             };
 
-            const docRef = await addDoc(collection($firebase.db, 'accountBooks'), newBook);
-            const createdBook = {
-                id: docRef.id,
-                ...newBook
-            };
-
-            accountBooks.value.unshift(createdBook);
-            return createdBook;
+            await addDoc(collection($firebase.db, 'accountBooks'), newBook);
         } catch (error) {
             console.error('新增記帳本失敗：', error);
             throw error;
@@ -54,15 +53,6 @@ export const useAccountBooks = () => {
                 ...updates,
                 updatedAt: new Date().toISOString(),
             });
-
-            const index = accountBooks.value.findIndex((b) => b.id === bookId);
-            if (index !== -1) {
-                accountBooks.value[index] = {
-                    ...accountBooks.value[index],
-                    ...updates,
-                    updatedAt: new Date().toISOString(),
-                };
-            }
         } catch (error) {
             console.error('更新記帳本失敗：', error);
             throw error;
@@ -74,7 +64,6 @@ export const useAccountBooks = () => {
         try {
             const bookRef = doc($firebase.db, 'accountBooks', bookId);
             await deleteDoc(bookRef);
-            accountBooks.value = accountBooks.value.filter((b) => b.id !== bookId);
         } catch (error) {
             console.error('刪除記帳本失敗：', error);
             throw error;
@@ -89,20 +78,24 @@ export const useAccountBooks = () => {
                 transactions,
                 updatedAt: new Date().toISOString(),
             });
-
-            const index = accountBooks.value.findIndex((b) => b.id === bookId);
-            if (index !== -1) {
-                accountBooks.value[index] = {
-                    ...accountBooks.value[index],
-                    transactions,
-                    updatedAt: new Date().toISOString(),
-                };
-            }
         } catch (error) {
             console.error('更新交易記錄失敗：', error);
             throw error;
         }
     };
+
+    // 清理即時監聽
+    const cleanup = () => {
+        if (unsubscribe) {
+            unsubscribe();
+            unsubscribe = null;
+        }
+    };
+
+    // 當組件卸載時清理即時監聽
+    onUnmounted(() => {
+        cleanup();
+    });
 
     return {
         accountBooks,
@@ -111,5 +104,6 @@ export const useAccountBooks = () => {
         updateBook,
         deleteBook,
         updateBookTransactions,
+        cleanup,
     };
 }; 
