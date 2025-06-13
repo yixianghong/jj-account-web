@@ -3,76 +3,87 @@
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-bold">月度分析</h2>
       <div class="flex items-center space-x-2">
-        <button class="p-2 rounded hover:bg-gray-100" @click="changeMonth(-1)">
-          <span class="text-lg">←</span>
-        </button>
-        <input
+        <UButton
+          color="neutral"
+          variant="ghost"
+          icon="i-heroicons-chevron-left"
+          @click="changeMonth(-1)"
+        />
+        <UInput
           v-model="selectedMonth"
           type="month"
-          class="p-2 border rounded"
+          class="w-40"
           @change="handleMonthChange"
-        >
-        <button class="p-2 rounded hover:bg-gray-100" @click="changeMonth(1)">
-          <span class="text-lg">→</span>
-        </button>
+        />
+        <UButton
+          color="neutral"
+          variant="ghost"
+          icon="i-heroicons-chevron-right"
+          @click="changeMonth(1)"
+        />
       </div>
     </div>
 
     <div class="grid grid-cols-3 gap-4 mb-6">
-      <div class="bg-green-100 p-4 rounded">
-        <div class="text-sm text-green-800">總收入</div>
-        <div class="text-2xl font-bold text-green-900">
+      <UCard class="bg-success-50">
+        <div class="text-sm text-success-700">總收入</div>
+        <div class="text-2xl font-bold text-success-900">
           {{ summary.totalIncome }}
         </div>
-      </div>
-      <div class="bg-red-100 p-4 rounded">
-        <div class="text-sm text-red-800">總支出</div>
-        <div class="text-2xl font-bold text-red-900">
+      </UCard>
+      <UCard class="bg-error-50">
+        <div class="text-sm text-error-700">總支出</div>
+        <div class="text-2xl font-bold text-error-900">
           {{ summary.totalExpense }}
         </div>
-      </div>
-      <div class="bg-blue-100 p-4 rounded">
-        <div class="text-sm text-blue-800">結餘</div>
-        <div class="text-2xl font-bold text-blue-900">
+      </UCard>
+      <UCard class="bg-primary-50">
+        <div class="text-sm text-primary-700">結餘</div>
+        <div class="text-2xl font-bold text-primary-900">
           {{ summary.balance }}
         </div>
-      </div>
+      </UCard>
     </div>
 
     <div class="mt-6">
       <h3 class="text-lg font-semibold mb-3">分類支出</h3>
       <div class="space-y-2">
-        <div
+        <UCard
           v-for="(amount, category) in summary.categorySummary"
           :key="category"
-          class="flex justify-between items-center p-2 bg-gray-50 rounded"
+          class="bg-gray-50"
         >
-          <span>{{ category }}</span>
-          <span class="font-medium">{{ amount }}</span>
-        </div>
+          <div class="flex justify-between items-center">
+            <span>{{ category }}</span>
+            <span class="font-medium">{{ amount }}</span>
+          </div>
+        </UCard>
       </div>
     </div>
 
     <div class="mt-6">
       <h3 class="text-lg font-semibold mb-3">未請款金額</h3>
       <div class="space-y-2">
-        <div
+        <UCard
           v-for="(amount, recorder) in summary.pendingAmountByRecorder"
           :key="recorder"
-          class="flex justify-between items-center p-2 bg-yellow-50 rounded"
+          class="bg-warning-50"
         >
-          <div class="flex items-center space-x-2">
-            <span>{{ recorder }}</span>
-            <button
-              v-if="amount > 0"
-              class="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
-              @click="handleClaimAll(recorder as Recorder)"
-            >
-              一鍵請領
-            </button>
+          <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+              <span>{{ recorder }}</span>
+              <UButton
+                v-if="amount > 0"
+                color="primary"
+                size="xs"
+                @click="handleClaimAll(recorder as Recorder)"
+              >
+                一鍵請領
+              </UButton>
+            </div>
+            <span class="font-medium">{{ amount }}</span>
           </div>
-          <span class="font-medium">{{ amount }}</span>
-        </div>
+        </UCard>
       </div>
     </div>
   </div>
