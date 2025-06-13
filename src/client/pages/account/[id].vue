@@ -38,13 +38,38 @@ const { accountBooks, loadAccountBooks } = useAccountBooks();
 const accountBook = ref<AccountBook | null>(null);
 const selectedBookId = ref<string>(route.params.id as string);
 const selectedMonth = ref(new Date().toISOString().slice(0, 7));
+const { user } = useAuth();
 
 // 保存 useTransactions 實例
 const transactionsInstance = ref<ReturnType<typeof useTransactions> | null>(null);
 
+// 檢查記帳本權限
+const checkBookPermission = async () => {
+  if (!user.value) {
+    router.push('/login');
+    return false;
+  }
+
+  const book = accountBooks.value.find(book => book.id === selectedBookId.value);
+  if (!book) {
+    router.push('/accounts');
+    return false;
+  }
+
+  if (book.userId !== user.value.uid) {
+    router.push('/accounts');
+    return false;
+  }
+
+  return true;
+};
+
 // 當選擇的記帳本改變時，重新初始化 useTransactions
-watch(selectedBookId, (newBookId) => {
+watch(selectedBookId, async (newBookId) => {
   if (newBookId) {
+    const hasPermission = await checkBookPermission();
+    if (!hasPermission) return;
+
     transactionsInstance.value = useTransactions(newBookId);
     transactionsInstance.value?.loadTransactions();
   } else {
@@ -116,8 +141,12 @@ onMounted(async () => {
   accountBook.value = accountBooks.value.find(book => book.id === bookId) || null;
   
   if (!accountBook.value) {
-    router.push('/');
+    router.push('/accounts');
+    return;
   }
+
+  const hasPermission = await checkBookPermission();
+  if (!hasPermission) return;
 
   if (selectedBookId.value) {
     transactionsInstance.value = useTransactions(selectedBookId.value);

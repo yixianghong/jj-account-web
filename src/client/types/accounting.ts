@@ -42,6 +42,7 @@ export interface MonthlySummary {
 export interface AccountBook {
   id: string;
   name: string;
+  userId: string;
   transactions: Transaction[];
   createdAt: string;
   updatedAt: string;
