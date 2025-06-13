@@ -3,13 +3,17 @@
     <div v-if="accountBooks.length > 0" class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">記帳本</h1>
       <div class="flex items-center space-x-4">
-        <USelect
-          v-model="selectedBookId"
-          :items="accountBooks"
-          label-key="name"
-          value-key="id"
-          @change="handleBookChange"
-        />
+        <div class="flex flex-wrap gap-2">
+          <UButton
+            v-for="book in accountBooks"
+            :key="book.id"
+            :color="selectedBookId === book.id ? 'primary' : 'neutral'"
+            variant="soft"
+            @click="handleBookSelect(book.id)"
+          >
+            {{ book.name }}
+          </UButton>
+        </div>
         <UButton label="新增記帳本" color="neutral" variant="subtle" @click="showNewBookForm = true" />
       </div>
     </div>
@@ -27,7 +31,8 @@
       </div>
       <template v-else>
         <div class="lg:col-span-2">
-          <TransactionForm @submit="handleAddTransaction" />
+          <TransactionForm v-if="selectedBookId" @submit="handleAddTransaction" />
+          <div v-else class="mb-4 text-center text-gray-500">請先選擇記帳本</div>
           <div class="mt-8">
             <TransactionList
               :transactions="filteredTransactions"
@@ -38,6 +43,7 @@
         </div>
         <div>
           <MonthlySummary
+            v-if="selectedBookId"
             :transactions="transactions"
             @month-change="handleMonthChange"
             @claim-all="handleClaimAll"
@@ -100,7 +106,8 @@ const filteredTransactions = computed(() => {
   return transactionsInstance.value.getTransactionsByMonth(selectedMonth.value);
 });
 
-const handleBookChange = async () => {
+const handleBookSelect = (bookId: string) => {
+  selectedBookId.value = bookId;
   selectedMonth.value = new Date().toISOString().slice(0, 7);
 };
 
@@ -108,8 +115,7 @@ const handleCreateBook = async () => {
   if (!newBookName.value.trim()) return;
 
   try {
-    const newBook = await createBook(newBookName.value);
-    selectedBookId.value = newBook.id;
+    await createBook(newBookName.value);
     showNewBookForm.value = false;
     newBookName.value = "";
   } catch (error) {
