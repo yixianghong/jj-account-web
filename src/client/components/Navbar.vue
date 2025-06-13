@@ -26,6 +26,16 @@ watch(() => router.currentRoute.value.path, (path) => {
   }
 })
 
+// 在組件掛載時檢查使用者狀態
+onMounted(() => {
+  // 等待下一個 tick，確保 user 狀態已初始化
+  nextTick(() => {
+    if (!user.value && router.currentRoute.value.path !== '/login') {
+      router.push('/login')
+    }
+  })
+})
+
 const items = computed(() => {
   const baseItems = [
     [

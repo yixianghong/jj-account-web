@@ -1,51 +1,49 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div v-if="!loading" class="max-w-md w-full space-y-8">
-      <div>
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <UCard v-if="!loading" class="max-w-md w-full">
+      <template #header>
+        <h2 class="text-center text-3xl font-extrabold text-gray-900">
           {{ isLogin ? '登入帳號' : '註冊帳號' }}
         </h2>
-      </div>
-      <form class="mt-8 space-y-6" @submit.prevent="handleSubmit">
-        <div class="rounded-md shadow-sm -space-y-px">
-          <div>
-            <label for="email" class="sr-only">電子郵件</label>
-            <input
-              id="email"
-              v-model="email"
-              name="email"
-              type="email"
-              required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="電子郵件"
-            >
-          </div>
-          <div>
-            <label for="password" class="sr-only">密碼</label>
-            <input
-              id="password"
-              v-model="password"
-              name="password"
-              type="password"
-              required
-              class="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="密碼"
-            >
-          </div>
-        </div>
+      </template>
 
-        <div v-if="error" class="text-red-500 text-sm text-center">
-          {{ error }}
-        </div>
+      <form class="space-y-6" @submit.prevent="handleSubmit">
+        <UFormField label="電子郵件">
+          <UInput
+            v-model="email"
+            type="email"
+            placeholder="請輸入電子郵件"
+            required
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField label="密碼">
+          <UInput
+            v-model="password"
+            type="password"
+            placeholder="請輸入密碼"
+            required
+            class="w-full"
+          />
+        </UFormField>
+
+        <UAlert
+          v-if="error"
+          color="error"
+          variant="soft"
+          :title="error"
+        />
 
         <div class="space-y-4">
-          <button
+          <UButton
             type="submit"
-            class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            :disabled="loading"
+            color="primary"
+            block
+            :loading="loading"
           >
             {{ isLogin ? '登入' : '註冊' }}
-          </button>
+          </UButton>
 
           <div class="relative">
             <div class="absolute inset-0 flex items-center">
@@ -56,34 +54,38 @@
             </div>
           </div>
 
-          <button
-            type="button"
-            class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            :disabled="loading"
+          <UButton
+            color="neutral"
+            variant="outline"
+            block
+            :loading="loading"
             @click="handleGoogleLogin"
           >
-            <img
-              class="h-5 w-5 mr-2"
-              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-              alt="Google logo"
-            >
+            <template #leading>
+              <img
+                class="h-5 w-5"
+                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                alt="Google logo"
+              >
+            </template>
             使用 Google 登入
-          </button>
+          </UButton>
         </div>
 
         <div class="text-center">
-          <button
-            type="button"
-            class="text-indigo-600 hover:text-indigo-500"
+          <UButton
+            color="neutral"
+            variant="link"
             @click="isLogin = !isLogin"
           >
             {{ isLogin ? '還沒有帳號？點此註冊' : '已有帳號？點此登入' }}
-          </button>
+          </UButton>
         </div>
       </form>
-    </div>
+    </UCard>
+
     <div v-else class="text-center">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-indigo-600" />
+      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary-600" />
       <p class="mt-2 text-gray-600">載入中...</p>
     </div>
   </div>

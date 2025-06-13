@@ -96,14 +96,14 @@
           </template>
           <template #body>
             <form class="space-y-4" @submit.prevent="handleAddSharedUser">
-              <UFormGroup label="使用者 Email">
+              <UFormField label="使用者 Email">
                 <UInput
                   v-model="newSharedUserEmail"
                   type="email"
                   placeholder="輸入使用者 Email"
                   required
                 />
-              </UFormGroup>
+              </UFormField>
             </form>
           </template>
             <template #footer>
