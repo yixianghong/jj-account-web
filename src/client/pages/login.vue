@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
+    <div v-if="!loading" class="max-w-md w-full space-y-8">
       <div>
         <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
           {{ isLogin ? '登入帳號' : '註冊帳號' }}
@@ -82,6 +82,10 @@
         </div>
       </form>
     </div>
+    <div v-else class="text-center">
+      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-indigo-600" />
+      <p class="mt-2 text-gray-600">載入中...</p>
+    </div>
   </div>
 </template>
 
@@ -91,11 +95,18 @@ defineOptions({
 })
 
 const router = useRouter()
-const { login, register, loginWithGoogle, error, loading } = useAuth()
+const { user, login, register, loginWithGoogle, error, loading } = useAuth()
 
 const email = ref('')
 const password = ref('')
 const isLogin = ref(true)
+
+// 監聽登入狀態
+watch(user, (newUser) => {
+  if (newUser) {
+    router.push('/')
+  }
+}, { immediate: true })
 
 const handleSubmit = async () => {
   try {

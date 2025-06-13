@@ -1,18 +1,24 @@
 <template>
   <div class="min-h-screen flex items-center justify-center">
-    <div v-if="accountBooks.length === 0" class="text-center py-8">
-      <div class="mb-8">
-        <UIcon name="i-heroicons-book-open" class="w-24 h-24 text-primary-500 mx-auto" />
+    <div v-if="!loading" class="text-center py-8">
+      <div v-if="accountBooks.length === 0">
+        <div class="mb-8">
+          <UIcon name="i-heroicons-book-open" class="w-24 h-24 text-primary-500 mx-auto" />
+        </div>
+        <h2 class="text-2xl font-bold mb-4">歡迎使用記帳本</h2>
+        <p class="text-gray-600 mb-4">請先建立一個記帳本來開始記帳</p>
+        <UButton
+          color="primary"
+          size="lg"
+          @click="showNewBookForm = true"
+        >
+          建立第一個記帳本
+        </UButton>
       </div>
-      <h2 class="text-2xl font-bold mb-4">歡迎使用記帳本</h2>
-      <p class="text-gray-600 mb-4">請先建立一個記帳本來開始記帳</p>
-      <UButton
-        color="primary"
-        size="lg"
-        @click="showNewBookForm = true"
-      >
-        建立第一個記帳本
-      </UButton>
+    </div>
+    <div v-else class="text-center">
+      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-indigo-600" />
+      <p class="mt-2 text-gray-600">載入中...</p>
     </div>
 
     <!-- 新增記帳本表單 -->
@@ -55,16 +61,18 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, nextTick, ref } from "vue";
+import { nextTick, ref, watch } from "vue";
 
 definePageMeta({
   layout: 'empty'
 });
 
 const router = useRouter();
+const { user, loading: authLoading } = useAuth();
 const { accountBooks, loadAccountBooks, createBook } = useAccountBooks();
 const showNewBookForm = ref(false);
 const isSubmitting = ref(false);
+const loading = ref(true);
 const bookForm = ref({
   name: "",
 });
@@ -97,8 +105,15 @@ const handleSubmit = async () => {
   }
 };
 
-// 初始化載入記帳本並判斷導向
-onMounted(async () => {
+// 監聽登入狀態
+watch([user, authLoading], async ([newUser, newAuthLoading]) => {
+  if (newAuthLoading) return; // 等待認證狀態初始化完成
+
+  if (!newUser) {
+    router.push('/login');
+    return;
+  }
+
   try {
     await loadAccountBooks();
     console.log('載入後的記帳本：', accountBooks.value);
@@ -112,6 +127,8 @@ onMounted(async () => {
     }
   } catch (error) {
     console.error('載入記帳本失敗：', error);
+  } finally {
+    loading.value = false;
   }
-});
+}, { immediate: true });
 </script>
