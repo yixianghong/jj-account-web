@@ -1,65 +1,29 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-8">
+    <div v-if="accountBooks.length > 0" class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">家庭記帳本</h1>
       <div class="flex items-center space-x-4">
-        <select
+        <USelect
           v-model="selectedBookId"
-          class="p-2 border rounded"
+          :items="accountBooks"
+          label-key="name"
+          value-key="id"
           @change="handleBookChange"
-        >
-          <option v-for="book in accountBooks" :key="book.id" :value="book.id">
-            {{ book.name }}
-          </option>
-        </select>
-        <button
-          class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          @click="showNewBookForm = true"
-        >
-          新增記帳本
-        </button>
+        />
+        <UButton label="新增記帳本" color="neutral" variant="subtle" @click="showNewBookForm = true" />
       </div>
     </div>
-
-    <div
-      v-if="showNewBookForm"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
-    >
-      <div class="bg-white p-6 rounded-lg w-96">
-        <h2 class="text-xl font-bold mb-4">新增記帳本</h2>
-        <input
-          v-model="newBookName"
-          type="text"
-          placeholder="記帳本名稱"
-          class="w-full p-2 border rounded mb-4"
-        >
-        <div class="flex justify-end space-x-2">
-          <button
-            class="px-4 py-2 border rounded hover:bg-gray-100"
-            @click="showNewBookForm = false"
-          >
-            取消
-          </button>
-          <button
-            class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            @click="handleCreateBook"
-          >
-            建立
-          </button>
-        </div>
-      </div>
-    </div>
-
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div v-if="accountBooks.length === 0" class="lg:col-span-3 text-center py-8">
         <h2 class="text-2xl font-bold mb-4">歡迎使用家庭記帳本</h2>
         <p class="text-gray-600 mb-4">請先建立一個記帳本來開始記帳</p>
-        <button
-          class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+        <UButton
+          color="primary"
+          size="lg"
           @click="showNewBookForm = true"
         >
           建立第一個記帳本
-        </button>
+        </UButton>
       </div>
       <template v-else>
         <div class="lg:col-span-2">
@@ -81,6 +45,24 @@
         </div>
       </template>
     </div>
+    <UModal v-model:open="showNewBookForm" title="新增記帳本">
+      <template #body>
+        <UInput
+          v-model="newBookName"
+          type="text"
+          placeholder="記帳本名稱"
+          class="mb-4"
+        />
+      </template>
+      <template #footer>
+        <UButton color="neutral" variant="outline" @click="showNewBookForm = false" >
+          取消
+        </UButton>
+        <UButton color="primary" @click="handleCreateBook" >
+          建立
+        </UButton>
+      </template>
+    </UModal>
   </div>
 </template>
 
