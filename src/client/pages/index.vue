@@ -215,5 +215,7 @@ const handleClaimAll = (recorder: Recorder) => {
 };
 
 // 初始化載入記帳本
-loadAccountBooks();
+onMounted(() => {
+  loadAccountBooks();
+});
 </script>
