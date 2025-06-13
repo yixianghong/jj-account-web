@@ -38,13 +38,36 @@
           {{ error }}
         </div>
 
-        <div>
+        <div class="space-y-4">
           <button
             type="submit"
             class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             :disabled="loading"
           >
             {{ isLogin ? '登入' : '註冊' }}
+          </button>
+
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"/>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-gray-50 text-gray-500">或</span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            :disabled="loading"
+            @click="handleGoogleLogin"
+          >
+            <img
+              class="h-5 w-5 mr-2"
+              src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+              alt="Google logo"
+            >
+            使用 Google 登入
           </button>
         </div>
 
@@ -64,7 +87,7 @@
 
 <script setup lang="ts">
 const router = useRouter()
-const { login, register, error, loading } = useAuth()
+const { login, register, loginWithGoogle, error, loading } = useAuth()
 
 const email = ref('')
 const password = ref('')
@@ -80,6 +103,15 @@ const handleSubmit = async () => {
     router.push('/')
   } catch (e) {
     console.error('認證失敗：', e)
+  }
+}
+
+const handleGoogleLogin = async () => {
+  try {
+    await loginWithGoogle()
+    router.push('/')
+  } catch (e) {
+    console.error('Google 登入失敗：', e)
   }
 }
 </script> 

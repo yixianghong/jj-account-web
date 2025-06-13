@@ -4,6 +4,7 @@ import {
     createUserWithEmailAndPassword,
     signOut,
     onAuthStateChanged,
+    signInWithPopup,
     type User,
     type AuthError
 } from 'firebase/auth'
@@ -34,6 +35,23 @@ export const useAuth = () => {
             if (!auth) throw new Error('Firebase auth is not initialized')
 
             const userCredential = await signInWithEmailAndPassword(auth, email, password)
+            return userCredential.user
+        } catch (e) {
+            const authError = e as AuthError
+            error.value = authError.message
+            throw authError
+        }
+    }
+
+    // Google 登入
+    const loginWithGoogle = async () => {
+        try {
+            error.value = null
+            const auth = nuxtApp.$firebase?.auth
+            const googleProvider = nuxtApp.$firebase?.googleProvider
+            if (!auth || !googleProvider) throw new Error('Firebase auth is not initialized')
+
+            const userCredential = await signInWithPopup(auth, googleProvider)
             return userCredential.user
         } catch (e) {
             const authError = e as AuthError
@@ -78,6 +96,7 @@ export const useAuth = () => {
         loading,
         error,
         login,
+        loginWithGoogle,
         register,
         logout
     }
