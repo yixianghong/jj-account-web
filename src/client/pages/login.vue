@@ -86,6 +86,10 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({
+  layout: 'blank'
+})
+
 const router = useRouter()
 const { login, register, loginWithGoogle, error, loading } = useAuth()
 
