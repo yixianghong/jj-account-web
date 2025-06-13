@@ -4,7 +4,7 @@
       <h1 class="text-3xl font-bold">{{ accountBook?.name || '記帳本' }}</h1>
       <UButton label="返回記帳本列表" color="neutral" variant="subtle" @click="router.push('/')" />
     </div>
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-2">
         <TransactionForm v-if="selectedBookId" @submit="handleAddTransaction" />
         <div class="mt-8">
@@ -16,7 +16,7 @@
           />
         </div>
       </div>
-      <div>
+      <div class="lg:col-span-2">
         <MonthlySummary
           v-if="selectedBookId"
           :transactions="transactions"
@@ -57,7 +57,7 @@ const checkBookPermission = async () => {
   }
 
   // 檢查使用者是否為記帳本擁有者或共享使用者
-  if (book.userId !== user.value.uid && !book.sharedUsers?.includes(user.value.email)) {
+  if (book.userId !== user.value.uid && !book.sharedUsers?.includes(user.value.email || '')) {
     router.push('/accounts');
     return false;
   }
