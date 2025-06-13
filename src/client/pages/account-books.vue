@@ -78,33 +78,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import type { AccountBook } from "~/types/accounting";
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
 
-const { $firebase } = useNuxtApp();
-const accountBooks = ref<AccountBook[]>([]);
+const { accountBooks, loadAccountBooks, createBook, updateBook, deleteBook } = useAccountBooks();
 const showNewBookForm = ref(false);
 const editingBook = ref<AccountBook | null>(null);
 const bookForm = ref({
   name: "",
 });
-
-// 載入記帳本資料
-const loadAccountBooks = async () => {
-  try {
-    const booksRef = collection($firebase.db, 'accountBooks');
-    const q = query(booksRef, orderBy('createdAt', 'desc'));
-    const querySnapshot = await getDocs(q);
-    
-    accountBooks.value = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    })) as AccountBook[];
-  } catch (error) {
-    console.error('載入記帳本失敗：', error);
-  }
-};
 
 // 處理編輯
 const handleEdit = (book: AccountBook) => {
@@ -117,9 +99,7 @@ const handleEdit = (book: AccountBook) => {
 const handleDelete = async (book: AccountBook) => {
   if (confirm(`確定要刪除記帳本「${book.name}」嗎？此操作無法復原。`)) {
     try {
-      const bookRef = doc($firebase.db, 'accountBooks', book.id);
-      await deleteDoc(bookRef);
-      accountBooks.value = accountBooks.value.filter((b) => b.id !== book.id);
+      await deleteBook(book.id);
     } catch (error) {
       console.error('刪除記帳本失敗：', error);
     }
@@ -133,34 +113,12 @@ const handleSubmit = async () => {
   try {
     if (editingBook.value) {
       // 編輯現有記帳本
-      const bookRef = doc($firebase.db, 'accountBooks', editingBook.value.id);
-      await updateDoc(bookRef, {
+      await updateBook(editingBook.value.id, {
         name: bookForm.value.name.trim(),
-        updatedAt: new Date().toISOString(),
       });
-
-      const index = accountBooks.value.findIndex((b) => b.id === editingBook.value?.id);
-      if (index !== -1) {
-        accountBooks.value[index] = {
-          ...accountBooks.value[index],
-          name: bookForm.value.name.trim(),
-          updatedAt: new Date().toISOString(),
-        };
-      }
     } else {
       // 新增記帳本
-      const newBook: Omit<AccountBook, 'id'> = {
-        name: bookForm.value.name.trim(),
-        transactions: [],
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-
-      const docRef = await addDoc(collection($firebase.db, 'accountBooks'), newBook);
-      accountBooks.value.unshift({
-        id: docRef.id,
-        ...newBook
-      });
+      await createBook(bookForm.value.name);
     }
 
     showNewBookForm.value = false;
@@ -172,7 +130,7 @@ const handleSubmit = async () => {
 };
 
 // 初始化載入記帳本
-onMounted(() => {
-  loadAccountBooks();
+onMounted(async () => {
+  await loadAccountBooks();
 });
 </script> 

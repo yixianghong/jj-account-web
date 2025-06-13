@@ -68,29 +68,13 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue";
-import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
+import type { Transaction, Recorder } from "~/types/accounting";
 
-const accountBooks = ref<AccountBook[]>([]);
+const { accountBooks, loadAccountBooks, createBook, updateBookTransactions } = useAccountBooks();
 const selectedBookId = ref<string>("");
 const showNewBookForm = ref(false);
 const newBookName = ref("");
 const selectedMonth = ref(new Date().toISOString().slice(0, 7));
-
-// 載入記帳本資料
-const loadAccountBooks = () => {
-  const savedBooks = localStorage.getItem("accountBooks");
-  if (savedBooks) {
-    accountBooks.value = JSON.parse(savedBooks);
-    if (accountBooks.value.length > 0 && !selectedBookId.value) {
-      selectedBookId.value = accountBooks.value[0].id;
-    }
-  }
-};
-
-// 儲存記帳本資料
-const saveAccountBooks = () => {
-  localStorage.setItem("accountBooks", JSON.stringify(accountBooks.value));
-};
 
 // 取得當前記帳本的交易記錄
 const transactions = computed(() => {
@@ -110,29 +94,24 @@ const handleBookChange = () => {
   selectedMonth.value = new Date().toISOString().slice(0, 7);
 };
 
-const handleCreateBook = () => {
+const handleCreateBook = async () => {
   if (!newBookName.value.trim()) return;
 
-  const newBook: AccountBook = {
-    id: crypto.randomUUID(),
-    name: newBookName.value.trim(),
-    transactions: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  accountBooks.value.push(newBook);
-  selectedBookId.value = newBook.id;
-  saveAccountBooks();
-  showNewBookForm.value = false;
-  newBookName.value = "";
+  try {
+    const newBook = await createBook(newBookName.value);
+    selectedBookId.value = newBook.id;
+    showNewBookForm.value = false;
+    newBookName.value = "";
+  } catch (error) {
+    console.error('建立記帳本失敗：', error);
+  }
 };
 
 const handleMonthChange = (month: string) => {
   selectedMonth.value = month;
 };
 
-const handleAddTransaction = (
+const handleAddTransaction = async (
   transaction: Omit<Transaction, "id" | "createdAt" | "updatedAt">
 ) => {
   const newTransaction: Transaction = {
@@ -146,50 +125,43 @@ const handleAddTransaction = (
     (book) => book.id === selectedBookId.value
   );
   if (currentBook) {
-    currentBook.transactions.push(newTransaction);
-    currentBook.transactions.sort(
+    const updatedTransactions = [...currentBook.transactions, newTransaction].sort(
       (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );
-    currentBook.updatedAt = new Date().toISOString();
-    saveAccountBooks();
+    await updateBookTransactions(currentBook.id, updatedTransactions);
   }
 };
 
-const handleDeleteTransaction = (id: string) => {
+const handleDeleteTransaction = async (id: string) => {
   const currentBook = accountBooks.value.find(
     (book) => book.id === selectedBookId.value
   );
   if (currentBook) {
-    currentBook.transactions = currentBook.transactions.filter(
+    const updatedTransactions = currentBook.transactions.filter(
       (t) => t.id !== id
     );
-    currentBook.updatedAt = new Date().toISOString();
-    saveAccountBooks();
+    await updateBookTransactions(currentBook.id, updatedTransactions);
   }
 };
 
-const handleUpdateTransaction = (updatedTransaction: Transaction) => {
+const handleUpdateTransaction = async (updatedTransaction: Transaction) => {
   const currentBook = accountBooks.value.find(
     (book) => book.id === selectedBookId.value
   );
   if (currentBook) {
-    const index = currentBook.transactions.findIndex(
-      (t) => t.id === updatedTransaction.id
+    const updatedTransactions = currentBook.transactions.map((t) =>
+      t.id === updatedTransaction.id ? updatedTransaction : t
     );
-    if (index !== -1) {
-      currentBook.transactions[index] = updatedTransaction;
-      currentBook.updatedAt = new Date().toISOString();
-      saveAccountBooks();
-    }
+    await updateBookTransactions(currentBook.id, updatedTransactions);
   }
 };
 
-const handleClaimAll = (recorder: Recorder) => {
+const handleClaimAll = async (recorder: Recorder) => {
   const currentBook = accountBooks.value.find(
     (book) => book.id === selectedBookId.value
   );
   if (currentBook) {
-    currentBook.transactions = currentBook.transactions.map((t) => {
+    const updatedTransactions = currentBook.transactions.map((t) => {
       if (
         t.type === "expense" &&
         t.recorder === recorder &&
@@ -203,13 +175,15 @@ const handleClaimAll = (recorder: Recorder) => {
       }
       return t;
     });
-    currentBook.updatedAt = new Date().toISOString();
-    saveAccountBooks();
+    await updateBookTransactions(currentBook.id, updatedTransactions);
   }
 };
 
 // 初始化載入記帳本
-onMounted(() => {
-  loadAccountBooks();
+onMounted(async () => {
+  await loadAccountBooks();
+  if (accountBooks.value.length > 0 && !selectedBookId.value) {
+    selectedBookId.value = accountBooks.value[0].id;
+  }
 });
 </script>
