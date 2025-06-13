@@ -20,7 +20,9 @@
             <UInput
               v-model="form.amount"
               class="w-full"
-              type="number"
+              type="tel"
+              inputmode="decimal"
+              pattern="[0-9]*"
               required
             />
           </UFormField>
