@@ -132,6 +132,7 @@ watch(
   (newType) => {
     if (newType === "income") {
       form.value.paymentStatus = "paid";
+      form.value.category = "存款";
     }
   }
 );
