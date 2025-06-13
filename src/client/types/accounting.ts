@@ -47,4 +47,5 @@ export interface AccountBook {
   transactions: Transaction[];
   createdAt: string;
   updatedAt: string;
+  lastUpdatedBy?: string;
 }

@@ -24,14 +24,12 @@
 
       <!-- 記帳本列表 -->
       <div v-if="accountBooks.length > 0" class="grid gap-6">
-        <UCard v-for="book in accountBooks" :key="book.id" @click="router.push(`/account/${book.id}`)">
+        <UCard v-for="book in accountBooks" :key="book.id" class="cursor-pointer hover:shadow-lg transition-shadow duration-300" @click="router.push(`/account/${book.id}`)">
           <template #header>
             <div class="flex justify-between items-start">
-              <div>
+              <div class="flex items-center">
                 <h2 class="text-xl font-semibold">{{ book.name }}</h2>
-                <p class="text-gray-500 text-sm">
-                  {{ new Date(book.createdAt).toLocaleDateString() }}
-                </p>
+                <UBadge color="primary" variant="soft" class="ml-2">{{ book.transactions?.length || 0 }} 筆</UBadge>
               </div>
               <div class="flex gap-2">
                 <UButton
@@ -53,8 +51,14 @@
               </div>
             </div>
           </template>
-          <template #footer>
-            <!-- 共享使用者列表 -->
+          <div class="text-gray-500 text-sm space-y-1">
+            <p>建立於：{{ new Date(book.createdAt).toLocaleDateString() }}</p>
+            <p v-if="book.updatedAt">
+              最後更新：{{ new Date(book.updatedAt).toLocaleDateString() }}
+              <span v-if="book.lastUpdatedBy">（{{ book.lastUpdatedBy }}）</span>
+            </p>
+          </div>
+          <!-- 共享使用者列表 -->
           <div v-if="book.sharedUsers && book.sharedUsers.length > 0" class="mt-4">
             <h3 class="text-sm font-medium text-gray-700 mb-2">共享使用者：</h3>
             <div class="flex flex-wrap gap-2">
@@ -77,7 +81,6 @@
               </UBadge>
             </div>
           </div>
-          </template>
         </UCard>
       </div>
 
@@ -116,6 +119,7 @@
                   type="submit"
                   color="primary"
                   variant="solid"
+                  @click="handleAddSharedUser"
                 >
                   新增
                 </UButton>
