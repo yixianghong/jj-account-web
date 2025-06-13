@@ -67,30 +67,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import type { Transaction, Recorder } from "~/types/accounting";
 
-const { accountBooks, loadAccountBooks, createBook, updateBookTransactions } = useAccountBooks();
+const { accountBooks, loadAccountBooks, createBook } = useAccountBooks();
 const selectedBookId = ref<string>("");
 const showNewBookForm = ref(false);
 const newBookName = ref("");
 const selectedMonth = ref(new Date().toISOString().slice(0, 7));
 
-// 取得當前記帳本的交易記錄
+// 保存 useTransactions 實例
+const transactionsInstance = ref<ReturnType<typeof useTransactions> | null>(null);
+
+// 當選擇的記帳本改變時，重新初始化 useTransactions
+watch(selectedBookId, (newBookId) => {
+  if (newBookId) {
+    transactionsInstance.value = useTransactions(newBookId);
+    transactionsInstance.value?.loadTransactions();
+  } else {
+    transactionsInstance.value = null;
+  }
+});
+
+// 取得交易記錄
 const transactions = computed(() => {
-  const currentBook = accountBooks.value.find(
-    (book) => book.id === selectedBookId.value
-  );
-  return currentBook?.transactions || [];
+  return transactionsInstance.value?.transactions || [];
 });
 
+// 取得過濾後的交易記錄
 const filteredTransactions = computed(() => {
-  return transactions.value.filter((t) =>
-    t.date.startsWith(selectedMonth.value)
-  );
+  if (!transactionsInstance.value) return [];
+  return transactionsInstance.value.getTransactionsByMonth(selectedMonth.value);
 });
 
-const handleBookChange = () => {
+const handleBookChange = async () => {
   selectedMonth.value = new Date().toISOString().slice(0, 7);
 };
 
@@ -114,68 +124,42 @@ const handleMonthChange = (month: string) => {
 const handleAddTransaction = async (
   transaction: Omit<Transaction, "id" | "createdAt" | "updatedAt">
 ) => {
-  const newTransaction: Transaction = {
-    ...transaction,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  };
-
-  const currentBook = accountBooks.value.find(
-    (book) => book.id === selectedBookId.value
-  );
-  if (currentBook) {
-    const updatedTransactions = [...currentBook.transactions, newTransaction].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-    );
-    await updateBookTransactions(currentBook.id, updatedTransactions);
+  if (!transactionsInstance.value) return;
+  
+  try {
+    await transactionsInstance.value.addTransaction(transaction);
+  } catch (error) {
+    console.error('新增交易記錄失敗：', error);
   }
 };
 
 const handleDeleteTransaction = async (id: string) => {
-  const currentBook = accountBooks.value.find(
-    (book) => book.id === selectedBookId.value
-  );
-  if (currentBook) {
-    const updatedTransactions = currentBook.transactions.filter(
-      (t) => t.id !== id
-    );
-    await updateBookTransactions(currentBook.id, updatedTransactions);
+  if (!transactionsInstance.value) return;
+  
+  try {
+    await transactionsInstance.value.deleteTransaction(id);
+  } catch (error) {
+    console.error('刪除交易記錄失敗：', error);
   }
 };
 
 const handleUpdateTransaction = async (updatedTransaction: Transaction) => {
-  const currentBook = accountBooks.value.find(
-    (book) => book.id === selectedBookId.value
-  );
-  if (currentBook) {
-    const updatedTransactions = currentBook.transactions.map((t) =>
-      t.id === updatedTransaction.id ? updatedTransaction : t
-    );
-    await updateBookTransactions(currentBook.id, updatedTransactions);
+  if (!transactionsInstance.value) return;
+  
+  try {
+    await transactionsInstance.value.updateTransaction(updatedTransaction.id, updatedTransaction);
+  } catch (error) {
+    console.error('更新交易記錄失敗：', error);
   }
 };
 
 const handleClaimAll = async (recorder: Recorder) => {
-  const currentBook = accountBooks.value.find(
-    (book) => book.id === selectedBookId.value
-  );
-  if (currentBook) {
-    const updatedTransactions = currentBook.transactions.map((t) => {
-      if (
-        t.type === "expense" &&
-        t.recorder === recorder &&
-        t.paymentStatus === "pending"
-      ) {
-        return {
-          ...t,
-          paymentStatus: "paid" as const,
-          updatedAt: new Date().toISOString(),
-        };
-      }
-      return t;
-    });
-    await updateBookTransactions(currentBook.id, updatedTransactions);
+  if (!transactionsInstance.value) return;
+  
+  try {
+    await transactionsInstance.value.updateTransactionsPaymentStatus(recorder, 'paid');
+  } catch (error) {
+    console.error('更新請款狀態失敗：', error);
   }
 };
 
