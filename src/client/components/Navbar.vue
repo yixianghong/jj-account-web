@@ -12,7 +12,7 @@
 
         <div class="flex items-center">
           <div v-if="user" class="flex items-center space-x-4">
-            <span class="text-gray-700">{{ user.email }}</span>
+            <span class="text-gray-700 cursor-pointer hover:text-indigo-600" @click="handleSettings">{{ user.displayName }}</span>
             <button
               class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
               @click="handleLogout"
@@ -41,5 +41,8 @@ const handleLogout = async () => {
   } catch (e) {
     console.error('登出失敗：', e)
   }
+}
+const handleSettings = () => {
+  router.push('/settings')
 }
 </script> 

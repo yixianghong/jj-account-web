@@ -6,7 +6,8 @@ import {
     onAuthStateChanged,
     signInWithPopup,
     type User,
-    type AuthError
+    type AuthError,
+    updateProfile
 } from 'firebase/auth'
 
 export const useAuth = () => {
@@ -91,6 +92,27 @@ export const useAuth = () => {
         }
     }
 
+    // 更新使用者暱稱
+    const updateDisplayName = async (newDisplayName: string) => {
+        if (!user.value) {
+            throw new Error('使用者未登入');
+        }
+
+        try {
+            await updateProfile(user.value, {
+                displayName: newDisplayName
+            });
+            // 更新本地狀態
+            user.value = {
+                ...user.value,
+                displayName: newDisplayName
+            };
+        } catch (error) {
+            console.error('更新暱稱失敗：', error);
+            throw error;
+        }
+    };
+
     return {
         user,
         loading,
@@ -98,6 +120,7 @@ export const useAuth = () => {
         login,
         loginWithGoogle,
         register,
-        logout
+        logout,
+        updateDisplayName
     }
 } 
