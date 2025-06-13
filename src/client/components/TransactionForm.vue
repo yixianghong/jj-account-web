@@ -4,97 +4,96 @@
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1">類型</label>
-          <select v-model="form.type" class="w-full p-2 border rounded">
-            <option value="income">收入</option>
-            <option value="expense">支出</option>
-          </select>
+          <UFormField label="類型">
+            <USelect
+              v-model="form.type"
+              class="w-full"
+              :items="[
+                { label: '收入', value: 'income' },
+                { label: '支出', value: 'expense' }
+              ]"
+            />
+          </UFormField>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">金額</label>
-          <input
-            v-model="form.amount"
-            type="number"
-            class="w-full p-2 border rounded"
-            required
-          >
+          <UFormField label="金額">
+            <UInput
+              v-model="form.amount"
+              class="w-full"
+              type="number"
+              required
+            />
+          </UFormField>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1">分類</label>
-          <select
-            v-model="form.category"
-            class="w-full p-2 border rounded"
-            required
-          >
-            <option
-              v-for="category in CATEGORIES"
-              :key="category"
-              :value="category"
-            >
-              {{ category }}
-            </option>
-          </select>
+          <UFormField label="分類">
+            <USelect
+              v-model="form.category"
+              class="w-full"
+              :items="CATEGORIES.map(category => ({ label: category, value: category }))"
+              required
+            />
+          </UFormField>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">記帳人</label>
-          <select
-            v-model="form.recorder"
-            class="w-full p-2 border rounded"
-            required
-          >
-            <option
-              v-for="recorder in RECORDERS"
-              :key="recorder"
-              :value="recorder"
-            >
-              {{ recorder }}
-            </option>
-          </select>
+          <UFormField label="記帳人">
+            <USelect
+              v-model="form.recorder"
+              class="w-full"
+              :items="RECORDERS.map(recorder => ({ label: recorder, value: recorder }))"
+              required
+            />
+          </UFormField>
         </div>
       </div>
 
       <div>
-        <label class="block text-sm font-medium mb-1">描述</label>
-        <input
-          v-model="form.description"
-          type="text"
-          class="w-full p-2 border rounded"
-          required
-        >
+        <UFormField label="描述">
+          <UInput
+            v-model="form.description"
+            type="text"
+            required
+            class="w-full"
+          />
+        </UFormField>
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-sm font-medium mb-1">日期</label>
-          <input
-            v-model="form.date"
-            type="date"
-            class="w-full p-2 border rounded"
-            required
-          >
+          <UFormField label="日期">
+            <UInput
+              v-model="form.date"
+              type="date"
+              required
+              class="w-full"
+            />
+          </UFormField>
         </div>
         <div>
-          <label class="block text-sm font-medium mb-1">請款狀態</label>
-          <select
-            v-model="form.paymentStatus"
-            class="w-full p-2 border rounded"
-            :disabled="form.type === 'income'"
-          >
-            <option value="pending">未請款</option>
-            <option value="paid">已請款</option>
-          </select>
+          <UFormField label="請款狀態">
+            <USelect
+              v-model="form.paymentStatus"
+              class="w-full"
+              :items="[
+                { label: '未請款', value: 'pending' },
+                { label: '已請款', value: 'paid' }
+              ]"
+              :disabled="form.type === 'income'"
+            />
+          </UFormField>
         </div>
       </div>
 
-      <button
+      <UButton
         type="submit"
-        class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+        color="primary"
+        block
       >
         新增記帳
-      </button>
+      </UButton>
     </form>
   </div>
 </template>
