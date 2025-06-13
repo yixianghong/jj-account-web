@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold">記帳本</h1>
+      <h1 class="text-3xl font-bold">{{ accountBook?.name || '記帳本' }}</h1>
       <UButton label="返回記帳本列表" color="neutral" variant="subtle" @click="router.push('/')" />
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -29,11 +29,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
-import type { Transaction, Recorder } from "~/types/accounting";
+import { ref, computed, watch, onMounted } from "vue";
+import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
 
 const router = useRouter();
 const route = useRoute();
+const { accountBooks, loadAccountBooks } = useAccountBooks();
+const accountBook = ref<AccountBook | null>(null);
 const selectedBookId = ref<string>(route.params.id as string);
 const selectedMonth = ref(new Date().toISOString().slice(0, 7));
 
@@ -107,8 +109,16 @@ const handleClaimAll = async (recorder: Recorder) => {
   }
 };
 
-// 初始化載入交易記錄
+// 載入記帳本資料
 onMounted(async () => {
+  await loadAccountBooks();
+  const bookId = route.params.id as string;
+  accountBook.value = accountBooks.value.find(book => book.id === bookId) || null;
+  
+  if (!accountBook.value) {
+    router.push('/');
+  }
+
   if (selectedBookId.value) {
     transactionsInstance.value = useTransactions(selectedBookId.value);
     await transactionsInstance.value?.loadTransactions();

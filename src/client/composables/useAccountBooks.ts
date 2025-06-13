@@ -44,7 +44,11 @@ export const useAccountBooks = () => {
                 updatedAt: new Date().toISOString(),
             };
 
-            await addDoc(collection($firebase.db, 'accountBooks'), newBook);
+            const docRef = await addDoc(collection($firebase.db, 'accountBooks'), newBook);
+            return {
+                id: docRef.id,
+                ...newBook
+            } as AccountBook;
         } catch (error) {
             console.error('新增記帳本失敗：', error);
             throw error;

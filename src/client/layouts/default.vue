@@ -9,8 +9,12 @@
 <script setup lang="ts">
 const items = [
   {
-    label: '記帳本',
+    label: '記帳列表',
     to: '/accounts',
+  },
+  {
+    label: '設定',
+    to: '#',
   },
 ];
 </script>
