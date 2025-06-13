@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto px-4 py-8">
     <div v-if="accountBooks.length > 0" class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold">家庭記帳本</h1>
+      <h1 class="text-3xl font-bold">記帳本</h1>
       <div class="flex items-center space-x-4">
         <USelect
           v-model="selectedBookId"
@@ -15,7 +15,7 @@
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div v-if="accountBooks.length === 0" class="lg:col-span-3 text-center py-8">
-        <h2 class="text-2xl font-bold mb-4">歡迎使用家庭記帳本</h2>
+        <h2 class="text-2xl font-bold mb-4">歡迎使用記帳本</h2>
         <p class="text-gray-600 mb-4">請先建立一個記帳本來開始記帳</p>
         <UButton
           color="primary"
