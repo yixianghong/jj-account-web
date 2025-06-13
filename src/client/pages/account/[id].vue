@@ -56,7 +56,8 @@ const checkBookPermission = async () => {
     return false;
   }
 
-  if (book.userId !== user.value.uid) {
+  // 檢查使用者是否為記帳本擁有者或共享使用者
+  if (book.userId !== user.value.uid && !book.sharedUsers?.includes(user.value.email)) {
     router.push('/accounts');
     return false;
   }

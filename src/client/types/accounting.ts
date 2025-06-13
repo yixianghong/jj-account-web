@@ -43,6 +43,7 @@ export interface AccountBook {
   id: string;
   name: string;
   userId: string;
+  sharedUsers: string[];
   transactions: Transaction[];
   createdAt: string;
   updatedAt: string;

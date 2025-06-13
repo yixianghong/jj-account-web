@@ -38,7 +38,8 @@ export const useTransactions = (bookId: string) => {
         }
 
         const bookData = bookDoc.data();
-        if (bookData.userId !== user.value.uid) {
+        // 檢查使用者是否為記帳本擁有者或共享使用者
+        if (bookData.userId !== user.value.uid && !bookData.sharedUsers?.includes(user.value.email)) {
             throw new Error('沒有權限存取此記帳本');
         }
     };
