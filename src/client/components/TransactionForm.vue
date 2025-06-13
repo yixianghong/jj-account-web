@@ -18,11 +18,12 @@
         <div>
           <UFormField label="金額">
             <UInput
-              v-model="form.amount"
+              v-model.number="form.amount"
               class="w-full"
-              type="tel"
+              type="number"
               inputmode="decimal"
-              pattern="[0-9]*"
+              step="0.01"
+              min="0"
               required
             />
           </UFormField>
