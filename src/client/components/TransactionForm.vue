@@ -1,7 +1,7 @@
 <template>
   <div class="transaction-form">
     <h2 class="text-xl font-bold mb-4">新增記帳</h2>
-    <form @submit.prevent="handleSubmit" class="space-y-4">
+    <form class="space-y-4" @submit.prevent="handleSubmit">
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">類型</label>
@@ -13,11 +13,11 @@
         <div>
           <label class="block text-sm font-medium mb-1">金額</label>
           <input
-            type="number"
             v-model="form.amount"
+            type="number"
             class="w-full p-2 border rounded"
             required
-          />
+          >
         </div>
       </div>
 
@@ -59,22 +59,22 @@
       <div>
         <label class="block text-sm font-medium mb-1">描述</label>
         <input
-          type="text"
           v-model="form.description"
+          type="text"
           class="w-full p-2 border rounded"
           required
-        />
+        >
       </div>
 
       <div class="grid grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium mb-1">日期</label>
           <input
-            type="date"
             v-model="form.date"
+            type="date"
             class="w-full p-2 border rounded"
             required
-          />
+          >
         </div>
         <div>
           <label class="block text-sm font-medium mb-1">請款狀態</label>

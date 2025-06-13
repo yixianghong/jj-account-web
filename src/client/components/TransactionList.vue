@@ -21,13 +21,13 @@
             </span>
             <button
               v-if="transaction.type === 'expense'"
-              @click="togglePaymentStatus(transaction)"
               :class="[
                 'ml-2 px-2 py-1 rounded text-sm cursor-pointer',
                 transaction.paymentStatus === 'paid'
                   ? 'bg-blue-100 text-blue-800'
                   : 'bg-yellow-100 text-yellow-800',
               ]"
+              @click="togglePaymentStatus(transaction)"
             >
               {{ transaction.paymentStatus === "paid" ? "已請款" : "未請款" }}
             </button>
@@ -44,9 +44,9 @@
               }}{{ transaction.amount }}
             </div>
             <button
-              @click="handleDelete(transaction.id)"
               class="p-1 text-red-500 hover:text-red-700"
               title="刪除"
+              @click="handleDelete(transaction.id)"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"

@@ -13,8 +13,8 @@
           </option>
         </select>
         <button
-          @click="showNewBookForm = true"
           class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          @click="showNewBookForm = true"
         >
           新增記帳本
         </button>
@@ -32,17 +32,17 @@
           type="text"
           placeholder="記帳本名稱"
           class="w-full p-2 border rounded mb-4"
-        />
+        >
         <div class="flex justify-end space-x-2">
           <button
-            @click="showNewBookForm = false"
             class="px-4 py-2 border rounded hover:bg-gray-100"
+            @click="showNewBookForm = false"
           >
             取消
           </button>
           <button
-            @click="handleCreateBook"
             class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            @click="handleCreateBook"
           >
             建立
           </button>

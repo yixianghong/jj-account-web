@@ -3,16 +3,16 @@
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-xl font-bold">月度分析</h2>
       <div class="flex items-center space-x-2">
-        <button @click="changeMonth(-1)" class="p-2 rounded hover:bg-gray-100">
+        <button class="p-2 rounded hover:bg-gray-100" @click="changeMonth(-1)">
           <span class="text-lg">←</span>
         </button>
         <input
-          type="month"
           v-model="selectedMonth"
+          type="month"
           class="p-2 border rounded"
           @change="handleMonthChange"
-        />
-        <button @click="changeMonth(1)" class="p-2 rounded hover:bg-gray-100">
+        >
+        <button class="p-2 rounded hover:bg-gray-100" @click="changeMonth(1)">
           <span class="text-lg">→</span>
         </button>
       </div>
@@ -65,8 +65,8 @@
             <span>{{ recorder }}</span>
             <button
               v-if="amount > 0"
-              @click="handleClaimAll(recorder as Recorder)"
               class="px-2 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600"
+              @click="handleClaimAll(recorder as Recorder)"
             >
               一鍵請領
             </button>
