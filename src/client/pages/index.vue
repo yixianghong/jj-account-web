@@ -51,23 +51,35 @@
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-      <div class="lg:col-span-2">
-        <TransactionForm @submit="handleAddTransaction" />
-        <div class="mt-8">
-          <TransactionList
-            :transactions="filteredTransactions"
-            @delete="handleDeleteTransaction"
-            @update="handleUpdateTransaction"
+      <div v-if="accountBooks.length === 0" class="lg:col-span-3 text-center py-8">
+        <h2 class="text-2xl font-bold mb-4">歡迎使用家庭記帳本</h2>
+        <p class="text-gray-600 mb-4">請先建立一個記帳本來開始記帳</p>
+        <button
+          class="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+          @click="showNewBookForm = true"
+        >
+          建立第一個記帳本
+        </button>
+      </div>
+      <template v-else>
+        <div class="lg:col-span-2">
+          <TransactionForm @submit="handleAddTransaction" />
+          <div class="mt-8">
+            <TransactionList
+              :transactions="filteredTransactions"
+              @delete="handleDeleteTransaction"
+              @update="handleUpdateTransaction"
+            />
+          </div>
+        </div>
+        <div>
+          <MonthlySummary
+            :transactions="transactions"
+            @month-change="handleMonthChange"
+            @claim-all="handleClaimAll"
           />
         </div>
-      </div>
-      <div>
-        <MonthlySummary
-          :transactions="transactions"
-          @month-change="handleMonthChange"
-          @claim-all="handleClaimAll"
-        />
-      </div>
+      </template>
     </div>
   </div>
 </template>
