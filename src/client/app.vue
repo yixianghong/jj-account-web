@@ -13,11 +13,7 @@ const { $firebase } = useNuxtApp();
 const items = [
   {
     label: '記帳本',
-    to: '/',
-  },
-  {
-    label: '記帳本管理',
-    to: '/account-books',
+    to: '/accounts',
   },
 ];
 

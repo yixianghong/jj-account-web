@@ -13,14 +13,20 @@ export const useAccountBooks = () => {
             const booksRef = collection($firebase.db, 'accountBooks');
             const q = query(booksRef, orderBy('createdAt', 'desc'));
 
-            // 設定即時監聽
-            unsubscribe = onSnapshot(q, (snapshot) => {
-                accountBooks.value = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                })) as AccountBook[];
-            }, (error) => {
-                console.error('監聽記帳本失敗：', error);
+            // 使用 Promise 等待第一次資料載入
+            await new Promise<void>((resolve) => {
+                // 設定即時監聽
+                unsubscribe = onSnapshot(q, (snapshot) => {
+                    accountBooks.value = snapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    })) as AccountBook[];
+                    // 第一次資料載入完成後，解析 Promise
+                    resolve();
+                }, (error) => {
+                    console.error('監聽記帳本失敗：', error);
+                    resolve(); // 即使發生錯誤也要解析 Promise
+                });
             });
 
         } catch (error) {
