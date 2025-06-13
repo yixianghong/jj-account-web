@@ -208,6 +208,16 @@ const closeShareDialog = () => {
 const handleAddSharedUser = async () => {
   if (!selectedBook.value) return;
 
+  // 檢查是否為自己的 email
+  if (newSharedUserEmail.value === user.value?.email) {
+    useToast().add({
+      title: '新增失敗',
+      description: '不能將自己加入為共享使用者',
+      color: 'error'
+    });
+    return;
+  }
+
   try {
     await addSharedUser(selectedBook.value.id, newSharedUserEmail.value);
     newSharedUserEmail.value = '';

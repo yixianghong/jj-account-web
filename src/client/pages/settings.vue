@@ -6,6 +6,15 @@
       <div class="bg-white rounded-lg shadow p-6">
         <h2 class="text-xl font-semibold mb-4">個人資料</h2>
         
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-1">
+            電子郵件
+          </label>
+          <div class="text-gray-900">
+            {{ user?.email }}
+          </div>
+        </div>
+
         <form class="space-y-4" @submit.prevent="handleUpdateDisplayName">
           <div>
             <label for="displayName" class="block text-sm font-medium text-gray-700 mb-1">
