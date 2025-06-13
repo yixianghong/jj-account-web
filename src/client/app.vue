@@ -8,7 +8,8 @@
 </template>
 
 <script setup lang="ts">
-// 這裡不需要任何邏輯，但需要 script 標籤
+const { $firebase } = useNuxtApp();
+
 const items = [
   {
     label: '記帳本',
@@ -19,4 +20,12 @@ const items = [
     to: '/account-books',
   },
 ];
+
+// 測試 Firebase 連線
+onMounted(async () => {
+  const isConnected = await $firebase.testConnection();
+  if (!isConnected) {
+    console.error('Firebase 連線失敗，請檢查設定值');
+  }
+});
 </script> 
