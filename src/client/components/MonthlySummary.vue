@@ -108,8 +108,8 @@ const handleMonthChange = () => {
 
 const changeMonth = (delta: number) => {
   const [year, month] = selectedMonth.value.split("-").map(Number);
-  const date = new Date(year, month - 1 + delta, 1);
-  selectedMonth.value = date.toISOString().slice(0, 7);
+  const newDate = new Date(year, month - 1 + delta, 1);
+  selectedMonth.value = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`;
   handleMonthChange();
 };
 
