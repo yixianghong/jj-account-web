@@ -109,6 +109,7 @@ import type {
   PaymentStatus,
   Category,
   AccountBook,
+  Recorder,
 } from "~/types/accounting";
 import { CATEGORIES } from "~/types/accounting";
 import { useAuth } from "~/composables/useAuth";
@@ -145,12 +146,13 @@ watch(() => props.book, async (newBook) => {
   
   // 合併使用者列表
   const allUsers = [owner, ...sharedUsers];
-  
+
   const options = await Promise.all(allUsers.map(async identifier => {
     const userInfo = await getUserInfo(identifier);
+    const displayName = userInfo.displayName || identifier;
     return {
-      label: userInfo.displayName || identifier,
-      value: userInfo.uid
+      label: displayName,
+      value: displayName
     };
   }));
 
