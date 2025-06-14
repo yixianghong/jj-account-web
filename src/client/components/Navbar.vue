@@ -2,7 +2,7 @@
   <UNavigationMenu color="neutral" :items="items" class="w-full px-4" />
 </template>
 
-<script setup lang="ts">
+<script setup>
 defineOptions({
   name: 'AppNavbar'
 })
@@ -18,13 +18,6 @@ const handleLogout = async () => {
     console.error('登出失敗：', e)
   }
 }
-
-// 監聽路由變化
-watch(() => router.currentRoute.value.path, (path) => {
-  if (path === '/logout') {
-    handleLogout()
-  }
-})
 
 // 在組件掛載時檢查使用者狀態
 // onMounted(() => {
@@ -58,7 +51,7 @@ const items = computed(() => {
       {
         label: '登出',
         icon: 'i-lucide-log-out',
-        to: '/logout'
+        onSelect: () => handleLogout()
       }
     ])
   } 
