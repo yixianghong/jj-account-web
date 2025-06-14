@@ -96,12 +96,14 @@
           </template>
           <template #body>
             <form class="space-y-4" @submit.prevent="handleAddSharedUser">
-              <UFormField label="使用者 Email">
+              <UFormField label="使用者 Email" hint="不能將自己加入為共享使用" >
                 <UInput
                   v-model="newSharedUserEmail"
                   type="email"
                   placeholder="輸入使用者 Email"
                   required
+                  class="w-full"
+                  
                 />
               </UFormField>
             </form>
@@ -119,6 +121,7 @@
                   type="submit"
                   color="primary"
                   variant="solid"
+                  :disabled="newSharedUserEmail === user?.email"
                   @click="handleAddSharedUser"
                 >
                   新增
