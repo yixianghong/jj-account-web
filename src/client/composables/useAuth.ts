@@ -9,6 +9,7 @@ import {
     type AuthError,
     updateProfile
 } from 'firebase/auth'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
 
 export const useAuth = () => {
     const nuxtApp = useNuxtApp()
@@ -16,13 +17,35 @@ export const useAuth = () => {
     const loading = ref(true)
     const error = ref<string | null>(null)
 
+    // 確保使用者資料存在於 Firestore
+    const ensureUserData = async (user: User) => {
+        const db = nuxtApp.$firebase?.db
+        if (!db) return
+
+        const userRef = doc(db, 'users', user.uid)
+        const userDoc = await getDoc(userRef)
+
+        if (!userDoc.exists()) {
+            // 如果使用者資料不存在，則建立
+            await setDoc(userRef, {
+                email: user.email,
+                displayName: user.displayName || null,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            })
+        }
+    }
+
     // 確保只在客戶端執行
     if (import.meta.client) {
         const auth = nuxtApp.$firebase?.auth
         if (auth) {
             // 監聽認證狀態
-            onAuthStateChanged(auth, (newUser) => {
+            onAuthStateChanged(auth, async (newUser) => {
                 user.value = newUser
+                if (newUser) {
+                    await ensureUserData(newUser)
+                }
                 loading.value = false
             })
         }
@@ -36,6 +59,7 @@ export const useAuth = () => {
             if (!auth) throw new Error('Firebase auth is not initialized')
 
             const userCredential = await signInWithEmailAndPassword(auth, email, password)
+            await ensureUserData(userCredential.user)
             return userCredential.user
         } catch (e) {
             const authError = e as AuthError
@@ -53,6 +77,7 @@ export const useAuth = () => {
             if (!auth || !googleProvider) throw new Error('Firebase auth is not initialized')
 
             const userCredential = await signInWithPopup(auth, googleProvider)
+            await ensureUserData(userCredential.user)
             return userCredential.user
         } catch (e) {
             const authError = e as AuthError
@@ -69,6 +94,7 @@ export const useAuth = () => {
             if (!auth) throw new Error('Firebase auth is not initialized')
 
             const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+            await ensureUserData(userCredential.user)
             return userCredential.user
         } catch (e) {
             const authError = e as AuthError
@@ -102,6 +128,17 @@ export const useAuth = () => {
             await updateProfile(user.value, {
                 displayName: newDisplayName
             });
+
+            // 更新 Firestore 中的使用者資料
+            const db = nuxtApp.$firebase?.db
+            if (db) {
+                const userRef = doc(db, 'users', user.value.uid)
+                await setDoc(userRef, {
+                    displayName: newDisplayName,
+                    updatedAt: new Date().toISOString()
+                }, { merge: true })
+            }
+
             // 更新本地狀態
             user.value = {
                 ...user.value,

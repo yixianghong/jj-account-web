@@ -6,7 +6,11 @@
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-2">
-        <TransactionForm v-if="selectedBookId" @submit="handleAddTransaction" />
+        <TransactionForm 
+          v-if="selectedBookId && accountBook" 
+          :book="accountBook"
+          @submit="handleAddTransaction" 
+        />
         <div class="mt-8">
           <TransactionList
             v-if="selectedBookId"

@@ -4,7 +4,7 @@ export type PaymentStatus = "pending" | "paid";
 
 export type Category = "存款" | "購物" | "飲食" | "生活" | "旅遊" | "其他";
 
-export type Recorder = "jason" | "jassica";
+export type Recorder = string;
 
 export const CATEGORIES: Category[] = [
   "存款",

@@ -46,7 +46,7 @@
             <USelect
               v-model="form.recorder"
               class="w-full"
-              :items="RECORDERS.map(recorder => ({ label: recorder, value: recorder }))"
+              :items="recorderOptions"
               required
             />
           </UFormField>
@@ -108,9 +108,15 @@ import type {
   TransactionType,
   PaymentStatus,
   Category,
-  Recorder,
+  AccountBook,
 } from "~/types/accounting";
-import { CATEGORIES, RECORDERS } from "~/types/accounting";
+import { CATEGORIES } from "~/types/accounting";
+import { useAuth } from "~/composables/useAuth";
+import { useUsers } from '~/composables/useUsers'
+
+const props = defineProps<{
+  book: AccountBook | null
+}>();
 
 const emit = defineEmits<{
   (
@@ -119,15 +125,54 @@ const emit = defineEmits<{
   ): void;
 }>();
 
+const { user } = useAuth();
+const { getUserInfo } = useUsers();
+
+const recorderOptions = ref<{ label: string; value: string; }[]>([]);
+
+// 監聽 book 變化，更新選項
+watch(() => props.book, async (newBook) => {
+  if (!newBook) {
+    recorderOptions.value = [];
+    return;
+  }
+
+  // 取得帳本擁有者
+  const owner = newBook.userId;
+  
+  // 取得共享使用者列表，並過濾掉擁有者
+  const sharedUsers = (newBook.sharedUsers || []).filter(email => email !== owner);
+  
+  // 合併使用者列表
+  const allUsers = [owner, ...sharedUsers];
+  
+  const options = await Promise.all(allUsers.map(async identifier => {
+    const userInfo = await getUserInfo(identifier);
+    return {
+      label: userInfo.displayName || identifier,
+      value: userInfo.uid
+    };
+  }));
+
+  recorderOptions.value = options;
+}, { immediate: true });
+
 const form = ref({
   type: "expense" as TransactionType,
   amount: 0,
   category: "其他" as Category,
   description: "",
   date: new Date().toISOString().split("T")[0],
-  recorder: "jason" as Recorder,
+  recorder: '',
   paymentStatus: "pending" as PaymentStatus,
 });
+
+// 監聽使用者狀態，更新預設記帳人
+watch(user, (newUser) => {
+  if (newUser?.uid) {
+    form.value.recorder = newUser.uid;
+  }
+}, { immediate: true });
 
 // 當類型變更為收入時，自動設定為已請款
 watch(
@@ -149,7 +194,7 @@ const handleSubmit = () => {
     category: "其他",
     description: "",
     date: new Date().toISOString().split("T")[0],
-    recorder: "jason",
+    recorder: '',
     paymentStatus: "pending",
   };
 };
