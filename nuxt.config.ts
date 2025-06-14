@@ -43,13 +43,17 @@ export default defineNuxtConfig({
   ui: {
   },
   nitro: {
-    preset: 'static'
+    preset: 'static',
+    prerender: {
+      ignore: ['/favicon.ico']
+    }
   },
   app: {
     head: {
       title: '記帳本',
       meta: [
-        { name: 'description', content: '記帳本' }
+        { name: 'description', content: '記帳本' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }

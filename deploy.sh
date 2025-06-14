@@ -4,4 +4,4 @@
 npm run generate
 
 # 部署到 Firebase
-firebase deploy --only hosting 
+firebase deploy --only hosting --force
