@@ -44,5 +44,16 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'static'
+  },
+  app: {
+    head: {
+      title: '記帳本',
+      meta: [
+        { name: 'description', content: '記帳本' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
+      ]
+    }
   }
 });
