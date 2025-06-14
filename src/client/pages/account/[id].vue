@@ -12,6 +12,15 @@
           @submit="handleAddTransaction" 
         />
         <div class="mt-8">
+          <MonthlySummary
+            v-if="selectedBookId"
+            :transactions="transactions"
+            @month-change="handleMonthChange"
+            @claim-all="handleClaimAll"
+          />
+        </div>
+      </div>
+      <div class="lg:col-span-2">
           <TransactionList
             v-if="selectedBookId"
             :transactions="filteredTransactions"
@@ -19,15 +28,6 @@
             @update="handleUpdateTransaction"
           />
         </div>
-      </div>
-      <div class="lg:col-span-2">
-        <MonthlySummary
-          v-if="selectedBookId"
-          :transactions="transactions"
-          @month-change="handleMonthChange"
-          @claim-all="handleClaimAll"
-        />
-      </div>
     </div>
   </div>
 </template>
