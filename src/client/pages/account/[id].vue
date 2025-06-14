@@ -2,7 +2,7 @@
   <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">{{ accountBook?.name || '記帳本' }}</h1>
-      <UButton label="返回記帳本列表" color="neutral" variant="subtle" @click="router.push('/')" />
+      <UButton label="返回記帳本列表" color="neutral" variant="subtle" @click="router.push('/accounts')" />
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-2">
