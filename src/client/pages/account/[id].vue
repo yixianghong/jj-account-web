@@ -2,6 +2,9 @@
   <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-3xl font-bold">{{ accountBook?.name || '記帳本' }}</h1>
+      <div class="flex items-center space-x-4">
+        <ImportExcel @import="handleImportExcel" />
+      </div>
       <UButton label="返回記帳本列表" color="neutral" variant="subtle" @click="router.push('/accounts')" />
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -38,7 +41,7 @@ import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
 
 const router = useRouter();
 const route = useRoute();
-const { accountBooks, loadAccountBooks } = useAccountBooks();
+const { accountBooks, loadAccountBooks, updateBookTransactions } = useAccountBooks();
 const accountBook = ref<AccountBook | null>(null);
 const selectedBookId = ref<string>(route.params.id as string);
 const selectedMonth = ref(new Date().toISOString().slice(0, 7));
@@ -136,6 +139,31 @@ const handleClaimAll = async (recorder: Recorder) => {
     await transactionsInstance.value.updateTransactionsPaymentStatus(recorder, 'paid');
   } catch (error) {
     console.error('更新請款狀態失敗：', error);
+  }
+};
+
+const handleImportExcel = async (transactions: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>[]) => {
+  if (!accountBook.value) return;
+
+  const newTransactions = transactions.map((t) => ({
+    ...t,
+    id: crypto.randomUUID(),
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }));
+
+  const updatedTransactions = [
+    ...accountBook.value.transactions,
+    ...newTransactions
+  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  try {
+    await updateBookTransactions(selectedBookId.value, updatedTransactions);
+    accountBook.value.transactions = updatedTransactions;
+    accountBook.value.updatedAt = new Date().toISOString();
+    accountBook.value.lastUpdatedBy = user.value?.uid;
+  } catch (error) {
+    console.error('匯入交易記錄失敗：', error);
   }
 };
 

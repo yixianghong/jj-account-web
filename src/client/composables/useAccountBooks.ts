@@ -365,7 +365,7 @@ export const useAccountBooks = () => {
             if (bookData.userId !== user.value.uid) {
                 throw new Error('沒有權限修改此記帳本');
             }
-
+            console.log('transactions', transactions);
             await updateDoc(bookRef, {
                 transactions,
                 updatedAt: new Date().toISOString(),
@@ -402,6 +402,6 @@ export const useAccountBooks = () => {
         updateBookTransactions,
         addSharedUser,
         removeSharedUser,
-        cleanup,
+        cleanup
     };
 }; 
