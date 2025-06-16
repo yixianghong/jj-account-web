@@ -35,6 +35,14 @@
                 <UButton
                   color="neutral"
                   variant="ghost"
+                  icon="i-heroicons-pencil-square"
+                  @click.stop="openEditDialog(book)"
+                >
+                  編輯
+                </UButton>
+                <UButton
+                  color="neutral"
+                  variant="ghost"
                   icon="i-heroicons-share"
                   @click.stop="openShareDialog(book)"
                 >
@@ -129,6 +137,44 @@
               </div>
             </template>
       </UModal>
+
+      <!-- 編輯對話框 -->
+      <UModal v-model:open="showEditDialog">
+        <template #header>
+          <h3 class="text-xl font-semibold">編輯記帳本</h3>
+        </template>
+        <template #body>
+          <form class="space-y-4" @submit.prevent="handleEditBook">
+            <UFormField label="記帳本名稱">
+              <UInput
+                v-model="editBookName"
+                placeholder="輸入記帳本名稱"
+                required
+                class="w-full"
+              />
+            </UFormField>
+          </form>
+        </template>
+        <template #footer>
+          <div class="flex justify-end gap-4">
+            <UButton
+              color="neutral"
+              variant="ghost"
+              @click="closeEditDialog"
+            >
+              取消
+            </UButton>
+            <UButton
+              type="submit"
+              color="primary"
+              variant="solid"
+              @click="handleEditBook"
+            >
+              儲存
+            </UButton>
+          </div>
+        </template>
+      </UModal>
     </UContainer>
   </div>
 </template>
@@ -136,13 +182,16 @@
 <script setup lang="ts">
 import type { AccountBook } from '~/types/accounting';
 const router = useRouter();
-const { accountBooks, loadAccountBooks, createBook, deleteBook, addSharedUser, removeSharedUser } = useAccountBooks();
+const { accountBooks, loadAccountBooks, createBook, deleteBook, addSharedUser, removeSharedUser, updateBook } = useAccountBooks();
 const { user } = useAuth();
 
 const newBookName = ref('');
 const showShareDialog = ref(false);
 const newSharedUserEmail = ref('');
 const selectedBook = ref<AccountBook | null>(null);
+const showEditDialog = ref(false);
+const editBookName = ref('');
+const editingBook = ref<AccountBook | null>(null);
 
 // 監聽使用者狀態，載入記帳本
 watch(user, (newUser) => {
@@ -258,6 +307,42 @@ const handleRemoveSharedUser = async (bookId: string, email: string) => {
     useToast().add({
       title: '移除失敗',
       description: '無法移除共享使用者，請稍後再試',
+      color: 'error'
+    });
+  }
+};
+
+// 開啟編輯對話框
+const openEditDialog = (book: AccountBook) => {
+  editingBook.value = book;
+  editBookName.value = book.name;
+  showEditDialog.value = true;
+};
+
+// 關閉編輯對話框
+const closeEditDialog = () => {
+  editingBook.value = null;
+  editBookName.value = '';
+  showEditDialog.value = false;
+};
+
+// 編輯記帳本
+const handleEditBook = async () => {
+  if (!editingBook.value) return;
+
+  try {
+    await updateBook(editingBook.value.id, { name: editBookName.value });
+    closeEditDialog();
+    useToast().add({
+      title: '更新成功',
+      description: '記帳本名稱已更新',
+      color: 'success'
+    });
+  } catch (error) {
+    console.error('更新記帳本失敗：', error);
+    useToast().add({
+      title: '更新失敗',
+      description: '無法更新記帳本，請稍後再試',
       color: 'error'
     });
   }
