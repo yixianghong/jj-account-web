@@ -37,25 +37,20 @@
                   variant="ghost"
                   icon="i-heroicons-pencil-square"
                   @click.stop="openEditDialog(book)"
-                >
-                  編輯
-                </UButton>
+                ></UButton>
                 <UButton
                   color="neutral"
                   variant="ghost"
                   icon="i-heroicons-share"
                   @click.stop="openShareDialog(book)"
                 >
-                  共享
                 </UButton>
                 <UButton
                   color="error"
                   variant="ghost"
                   icon="i-heroicons-trash"
                   @click.stop="handleDeleteBook(book.id)"
-                >
-                  刪除
-                </UButton>
+                ></UButton>
               </div>
             </div>
           </template>
