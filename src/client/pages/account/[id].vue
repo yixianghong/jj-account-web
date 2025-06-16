@@ -143,27 +143,49 @@ const handleClaimAll = async (recorder: Recorder) => {
 };
 
 const handleImportExcel = async (transactions: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>[]) => {
-  if (!accountBook.value) return;
-
-  const newTransactions = transactions.map((t) => ({
-    ...t,
-    id: crypto.randomUUID(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  }));
-
-  const updatedTransactions = [
-    ...accountBook.value.transactions,
-    ...newTransactions
-  ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  if (!accountBook.value || !transactionsInstance.value) return;
 
   try {
-    await updateBookTransactions(selectedBookId.value, updatedTransactions);
-    accountBook.value.transactions = updatedTransactions;
+    // 過濾掉無效的資料
+    const validTransactions = transactions.filter(t => 
+      t.date && 
+      t.type && 
+      t.amount && 
+      t.category && 
+      t.recorder && 
+      t.paymentStatus
+    );
+
+    // 使用 transactionsInstance 來新增交易記錄
+    for (const transaction of validTransactions) {
+      await transactionsInstance.value.addTransaction(transaction);
+    }
+
+    // 更新本地狀態
     accountBook.value.updatedAt = new Date().toISOString();
     accountBook.value.lastUpdatedBy = user.value?.uid;
+
+    // 顯示成功訊息
+    if (validTransactions.length < transactions.length) {
+      useToast().add({
+        title: '部分資料已匯入',
+        description: `成功匯入 ${validTransactions.length} 筆，跳過 ${transactions.length - validTransactions.length} 筆無效資料`,
+        color: 'warning'
+      });
+    } else {
+      useToast().add({
+        title: '匯入成功',
+        description: `成功匯入 ${validTransactions.length} 筆資料`,
+        color: 'success'
+      });
+    }
   } catch (error) {
     console.error('匯入交易記錄失敗：', error);
+    useToast().add({
+      title: '匯入失敗',
+      description: '匯入交易記錄時發生錯誤',
+      color: 'error'
+    });
   }
 };
 
