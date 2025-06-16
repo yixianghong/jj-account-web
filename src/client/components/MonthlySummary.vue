@@ -28,19 +28,19 @@
       <UCard class="bg-success-50">
         <div class="text-sm text-success-700">總收入</div>
         <div class="text-2xl font-bold text-success-900">
-          {{ summary.totalIncome }}
+          ${{ summary.totalIncome.toLocaleString() }}
         </div>
       </UCard>
       <UCard class="bg-error-50">
         <div class="text-sm text-error-700">總支出</div>
         <div class="text-2xl font-bold text-error-900">
-          {{ summary.totalExpense }}
+          ${{ summary.totalExpense.toLocaleString() }}
         </div>
       </UCard>
       <UCard class="bg-primary-50">
         <div class="text-sm text-primary-700">結餘</div>
         <div class="text-2xl font-bold text-primary-900">
-          {{ summary.balance }}
+          ${{ summary.balance.toLocaleString() }}
         </div>
       </UCard>
     </div>
@@ -55,7 +55,7 @@
         >
           <div class="flex justify-between items-center">
             <span>{{ category }}</span>
-            <span class="font-medium">{{ amount }}</span>
+            <span class="font-medium">${{ amount?.toLocaleString() }}</span>
           </div>
         </UCard>
       </div>
@@ -81,7 +81,7 @@
                 一鍵請領
               </UButton>
             </div>
-            <span class="font-medium">{{ amount }}</span>
+            <span class="font-medium">${{ amount.toLocaleString() }}</span>
           </div>
         </UCard>
       </div>

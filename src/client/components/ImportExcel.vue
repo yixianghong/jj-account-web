@@ -151,7 +151,7 @@ const handleFileChange = async (event: Event) => {
 
     if (jsonData.length > 0) {
       // 取得 Excel 欄位名稱
-      excelHeaders.value = Object.keys(jsonData[0]);
+      excelHeaders.value = Object.keys(jsonData[0] as Record<string, unknown>);
       rawData.value = jsonData;
 
       // 嘗試自動對應欄位

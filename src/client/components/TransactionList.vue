@@ -36,7 +36,7 @@
           </div>
           <div class="flex items-center space-x-2">
             <div class="text-lg font-bold">
-              {{ transaction.type === "income" ? "+" : "-" }}{{ transaction.amount }}
+              {{ transaction.type === "income" ? "+" : "-" }}${{ transaction.amount.toLocaleString() }}
             </div>
             <UButton
               color="error"
