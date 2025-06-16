@@ -16,6 +16,7 @@ import type { AccountBook, Transaction } from '~/types/accounting';
 export const useFirebase = () => {
     const { $firebase } = useNuxtApp();
     const { db } = $firebase;
+    const { handleError } = useErrorHandler();
     const loading = ref(false);
     const error = ref<string | null>(null);
 
@@ -34,8 +35,7 @@ export const useFirebase = () => {
                 ...doc.data()
             })) as AccountBook[];
         } catch (e) {
-            error.value = '取得記帳本失敗';
-            console.error(e);
+            handleError(e, '取得記帳本失敗');
             return [];
         } finally {
             loading.value = false;
@@ -53,8 +53,7 @@ export const useFirebase = () => {
             });
             return docRef.id;
         } catch (e) {
-            error.value = '新增記帳本失敗';
-            console.error(e);
+            handleError(e, '新增記帳本失敗');
             return null;
         } finally {
             loading.value = false;
@@ -72,8 +71,7 @@ export const useFirebase = () => {
             });
             return true;
         } catch (e) {
-            error.value = '更新記帳本失敗';
-            console.error(e);
+            handleError(e, '更新記帳本失敗');
             return false;
         } finally {
             loading.value = false;
@@ -87,8 +85,7 @@ export const useFirebase = () => {
             await deleteDoc(doc(db, 'accountBooks', id));
             return true;
         } catch (e) {
-            error.value = '刪除記帳本失敗';
-            console.error(e);
+            handleError(e, '刪除記帳本失敗');
             return false;
         } finally {
             loading.value = false;
@@ -106,8 +103,7 @@ export const useFirebase = () => {
             });
             return docRef.id;
         } catch (e) {
-            error.value = '新增交易記錄失敗';
-            console.error(e);
+            handleError(e, '新增交易記錄失敗');
             return null;
         } finally {
             loading.value = false;
@@ -125,8 +121,7 @@ export const useFirebase = () => {
             });
             return true;
         } catch (e) {
-            error.value = '更新交易記錄失敗';
-            console.error(e);
+            handleError(e, '更新交易記錄失敗');
             return false;
         } finally {
             loading.value = false;
@@ -140,8 +135,7 @@ export const useFirebase = () => {
             await deleteDoc(doc(db, 'accountBooks', bookId, 'transactions', transactionId));
             return true;
         } catch (e) {
-            error.value = '刪除交易記錄失敗';
-            console.error(e);
+            handleError(e, '刪除交易記錄失敗');
             return false;
         } finally {
             loading.value = false;

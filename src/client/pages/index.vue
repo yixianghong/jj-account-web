@@ -96,7 +96,7 @@ const handleSubmit = async () => {
     bookForm.value.name = "";
     
     // 導向到新建立的記帳本
-    router.push(`/account/${newBook.id}`);
+    router.push(`/account/${newBook?.id}`);
   } catch (error) {
     console.error('建立記帳本失敗：', error);
     alert('建立記帳本失敗，請稍後再試');

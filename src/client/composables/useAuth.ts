@@ -10,9 +10,11 @@ import {
     updateProfile
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { useErrorHandler } from '~/composables/useErrorHandler'
 
 export const useAuth = () => {
     const nuxtApp = useNuxtApp()
+    const { handleError } = useErrorHandler()
     const user = ref<User | null>(null)
     const loading = ref(true)
     const error = ref<string | null>(null)
@@ -20,19 +22,26 @@ export const useAuth = () => {
     // 確保使用者資料存在於 Firestore
     const ensureUserData = async (user: User) => {
         const db = nuxtApp.$firebase?.db
-        if (!db) return
+        if (!db) {
+            handleError('Firebase 資料庫未初始化');
+            return;
+        }
 
-        const userRef = doc(db, 'users', user.uid)
-        const userDoc = await getDoc(userRef)
+        try {
+            const userRef = doc(db, 'users', user.uid)
+            const userDoc = await getDoc(userRef)
 
-        if (!userDoc.exists()) {
-            // 如果使用者資料不存在，則建立
-            await setDoc(userRef, {
-                email: user.email,
-                displayName: user.displayName || null,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString()
-            })
+            if (!userDoc.exists()) {
+                // 如果使用者資料不存在，則建立
+                await setDoc(userRef, {
+                    email: user.email,
+                    displayName: user.displayName || null,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                })
+            }
+        } catch (error) {
+            handleError(error, '建立使用者資料失敗');
         }
     }
 
@@ -47,6 +56,9 @@ export const useAuth = () => {
                     await ensureUserData(newUser)
                 }
                 loading.value = false
+            }, (error) => {
+                handleError(error, '認證狀態監聽失敗');
+                loading.value = false
             })
         }
     }
@@ -56,7 +68,10 @@ export const useAuth = () => {
         try {
             error.value = null
             const auth = nuxtApp.$firebase?.auth
-            if (!auth) throw new Error('Firebase auth is not initialized')
+            if (!auth) {
+                handleError('Firebase 認證未初始化');
+                return;
+            }
 
             const userCredential = await signInWithEmailAndPassword(auth, email, password)
             await ensureUserData(userCredential.user)
@@ -64,6 +79,7 @@ export const useAuth = () => {
         } catch (e) {
             const authError = e as AuthError
             error.value = authError.message
+            handleError(authError, '登入失敗');
             throw authError
         }
     }
@@ -74,7 +90,10 @@ export const useAuth = () => {
             error.value = null
             const auth = nuxtApp.$firebase?.auth
             const googleProvider = nuxtApp.$firebase?.googleProvider
-            if (!auth || !googleProvider) throw new Error('Firebase auth is not initialized')
+            if (!auth || !googleProvider) {
+                handleError('Firebase 認證未初始化');
+                return;
+            }
 
             const userCredential = await signInWithPopup(auth, googleProvider)
             await ensureUserData(userCredential.user)
@@ -82,6 +101,7 @@ export const useAuth = () => {
         } catch (e) {
             const authError = e as AuthError
             error.value = authError.message
+            handleError(authError, 'Google 登入失敗');
             throw authError
         }
     }
@@ -91,7 +111,10 @@ export const useAuth = () => {
         try {
             error.value = null
             const auth = nuxtApp.$firebase?.auth
-            if (!auth) throw new Error('Firebase auth is not initialized')
+            if (!auth) {
+                handleError('Firebase 認證未初始化');
+                return;
+            }
 
             const userCredential = await createUserWithEmailAndPassword(auth, email, password)
             await ensureUserData(userCredential.user)
@@ -99,6 +122,7 @@ export const useAuth = () => {
         } catch (e) {
             const authError = e as AuthError
             error.value = authError.message
+            handleError(authError, '註冊失敗');
             throw authError
         }
     }
@@ -108,12 +132,16 @@ export const useAuth = () => {
         try {
             error.value = null
             const auth = nuxtApp.$firebase?.auth
-            if (!auth) throw new Error('Firebase auth is not initialized')
+            if (!auth) {
+                handleError('Firebase 認證未初始化');
+                return;
+            }
 
             await signOut(auth)
         } catch (e) {
             const authError = e as AuthError
             error.value = authError.message
+            handleError(authError, '登出失敗');
             throw authError
         }
     }
@@ -121,7 +149,8 @@ export const useAuth = () => {
     // 更新使用者暱稱
     const updateDisplayName = async (newDisplayName: string) => {
         if (!user.value) {
-            throw new Error('使用者未登入');
+            handleError('使用者未登入');
+            return;
         }
 
         try {
@@ -145,7 +174,7 @@ export const useAuth = () => {
                 displayName: newDisplayName
             };
         } catch (error) {
-            console.error('更新暱稱失敗：', error);
+            handleError(error, '更新暱稱失敗');
             throw error;
         }
     };

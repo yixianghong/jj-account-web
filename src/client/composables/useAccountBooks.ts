@@ -1,10 +1,13 @@
 import { ref, onUnmounted } from 'vue';
 import type { AccountBook } from '~/types/accounting';
 import { collection, addDoc, updateDoc, deleteDoc, doc, query, onSnapshot, where, getDoc, getDocs } from 'firebase/firestore';
+import { useAuth } from '~/composables/useAuth';
+import { useErrorHandler } from '~/composables/useErrorHandler';
 
 export const useAccountBooks = () => {
     const { $firebase } = useNuxtApp();
     const { user, loading: authLoading } = useAuth();
+    const { handleError } = useErrorHandler();
     const accountBooks = ref<AccountBook[]>([]);
     let unsubscribeOwned: (() => void) | null = null;
     let unsubscribeShared: (() => void) | null = null;
@@ -28,7 +31,7 @@ export const useAccountBooks = () => {
         await waitForAuth();
 
         if (!user.value) {
-            console.error('使用者未登入');
+            handleError('使用者未登入');
             return;
         }
 
@@ -133,26 +136,17 @@ export const useAccountBooks = () => {
             });
 
         } catch (error) {
-            console.error('載入記帳本失敗：', error);
+            handleError(error, '載入記帳本失敗');
         }
     };
 
     // 新增記帳本
     const createBook = async (name: string) => {
-        // 等待認證狀態初始化完成
-        if (authLoading.value) {
-            await new Promise<void>((resolve) => {
-                const unwatch = watch(authLoading, (newLoading) => {
-                    if (!newLoading) {
-                        unwatch();
-                        resolve();
-                    }
-                });
-            });
-        }
+        await waitForAuth();
 
         if (!user.value) {
-            throw new Error('使用者未登入');
+            handleError('使用者未登入');
+            return;
         }
 
         try {
@@ -171,27 +165,18 @@ export const useAccountBooks = () => {
                 ...newBook
             } as AccountBook;
         } catch (error) {
-            console.error('新增記帳本失敗：', error);
+            handleError(error, '新增記帳本失敗');
             throw error;
         }
     };
 
     // 新增共享使用者
     const addSharedUser = async (bookId: string, email: string) => {
-        // 等待認證狀態初始化完成
-        if (authLoading.value) {
-            await new Promise<void>((resolve) => {
-                const unwatch = watch(authLoading, (newLoading) => {
-                    if (!newLoading) {
-                        unwatch();
-                        resolve();
-                    }
-                });
-            });
-        }
+        await waitForAuth();
 
         if (!user.value) {
-            throw new Error('使用者未登入');
+            handleError('使用者未登入');
+            return;
         }
 
         try {
@@ -222,27 +207,18 @@ export const useAccountBooks = () => {
                 updatedAt: new Date().toISOString(),
             });
         } catch (error) {
-            console.error('新增共享使用者失敗：', error);
+            handleError(error, '新增共享使用者失敗');
             throw error;
         }
     };
 
     // 移除共享使用者
     const removeSharedUser = async (bookId: string, email: string) => {
-        // 等待認證狀態初始化完成
-        if (authLoading.value) {
-            await new Promise<void>((resolve) => {
-                const unwatch = watch(authLoading, (newLoading) => {
-                    if (!newLoading) {
-                        unwatch();
-                        resolve();
-                    }
-                });
-            });
-        }
+        await waitForAuth();
 
         if (!user.value) {
-            throw new Error('使用者未登入');
+            handleError('使用者未登入');
+            return;
         }
 
         try {
@@ -265,7 +241,7 @@ export const useAccountBooks = () => {
                 updatedAt: new Date().toISOString(),
             });
         } catch (error) {
-            console.error('移除共享使用者失敗：', error);
+            handleError(error, '移除共享使用者失敗');
             throw error;
         }
     };
@@ -275,7 +251,8 @@ export const useAccountBooks = () => {
         await waitForAuth();
 
         if (!user.value) {
-            throw new Error('使用者未登入');
+            handleError('使用者未登入');
+            return;
         }
 
         const bookRef = doc($firebase.db, 'accountBooks', bookId);
@@ -299,20 +276,11 @@ export const useAccountBooks = () => {
 
     // 刪除記帳本
     const deleteBook = async (bookId: string) => {
-        // 等待認證狀態初始化完成
-        if (authLoading.value) {
-            await new Promise<void>((resolve) => {
-                const unwatch = watch(authLoading, (newLoading) => {
-                    if (!newLoading) {
-                        unwatch();
-                        resolve();
-                    }
-                });
-            });
-        }
+        await waitForAuth();
 
         if (!user.value) {
-            throw new Error('使用者未登入');
+            handleError('使用者未登入');
+            return;
         }
 
         try {
@@ -330,27 +298,18 @@ export const useAccountBooks = () => {
 
             await deleteDoc(bookRef);
         } catch (error) {
-            console.error('刪除記帳本失敗：', error);
+            handleError(error, '刪除記帳本失敗');
             throw error;
         }
     };
 
     // 更新記帳本中的交易記錄
     const updateBookTransactions = async (bookId: string, transactions: AccountBook['transactions']) => {
-        // 等待認證狀態初始化完成
-        if (authLoading.value) {
-            await new Promise<void>((resolve) => {
-                const unwatch = watch(authLoading, (newLoading) => {
-                    if (!newLoading) {
-                        unwatch();
-                        resolve();
-                    }
-                });
-            });
-        }
+        await waitForAuth();
 
         if (!user.value) {
-            throw new Error('使用者未登入');
+            handleError('使用者未登入');
+            return;
         }
 
         try {
@@ -371,7 +330,7 @@ export const useAccountBooks = () => {
                 updatedAt: new Date().toISOString(),
             });
         } catch (error) {
-            console.error('更新交易記錄失敗：', error);
+            handleError(error, '更新交易記錄失敗');
             throw error;
         }
     };

@@ -184,6 +184,7 @@ import type { AccountBook } from '~/types/accounting';
 const router = useRouter();
 const { accountBooks, loadAccountBooks, createBook, deleteBook, addSharedUser, removeSharedUser, updateBook } = useAccountBooks();
 const { user } = useAuth();
+const { handleError } = useErrorHandler();
 
 const newBookName = ref('');
 const showShareDialog = ref(false);
@@ -196,7 +197,7 @@ const editingBook = ref<AccountBook | null>(null);
 // 監聽使用者狀態，載入記帳本
 watch(user, (newUser) => {
   if (newUser) {
-    loadAccountBooks();
+    loadAccountBooks().catch(handleError);
   }
 }, { immediate: true });
 
@@ -211,12 +212,7 @@ const handleCreateBook = async () => {
       color: 'success'
     });
   } catch (error) {
-    console.error('新增記帳本失敗：', error);
-    useToast().add({
-      title: '新增失敗',
-      description: '無法建立記帳本，請稍後再試',
-      color: 'error'
-    });
+    handleError(error, '無法建立記帳本，請稍後再試');
   }
 };
 
@@ -234,12 +230,7 @@ const handleDeleteBook = async (bookId: string) => {
       color: 'success'
     });
   } catch (error) {
-    console.error('刪除記帳本失敗：', error);
-    useToast().add({
-      title: '刪除失敗',
-      description: '無法刪除記帳本，請稍後再試',
-      color: 'error'
-    });
+    handleError(error, '無法刪除記帳本，請稍後再試');
   }
 };
 
@@ -262,11 +253,7 @@ const handleAddSharedUser = async () => {
 
   // 檢查是否為自己的 email
   if (newSharedUserEmail.value === user.value?.email) {
-    useToast().add({
-      title: '新增失敗',
-      description: '不能將自己加入為共享使用者',
-      color: 'error'
-    });
+    handleError('不能將自己加入為共享使用者');
     return;
   }
 
@@ -280,12 +267,7 @@ const handleAddSharedUser = async () => {
       color: 'success'
     });
   } catch (error) {
-    console.error('新增共享使用者失敗：', error);
-    useToast().add({
-      title: '新增失敗',
-      description: error instanceof Error ? error.message : '無法新增共享使用者，請稍後再試',
-      color: 'error'
-    });
+    handleError(error);
   }
 };
 
@@ -303,12 +285,7 @@ const handleRemoveSharedUser = async (bookId: string, email: string) => {
       color: 'success'
     });
   } catch (error) {
-    console.error('移除共享使用者失敗：', error);
-    useToast().add({
-      title: '移除失敗',
-      description: '無法移除共享使用者，請稍後再試',
-      color: 'error'
-    });
+    handleError(error, '無法移除共享使用者，請稍後再試');
   }
 };
 
@@ -339,12 +316,7 @@ const handleEditBook = async () => {
       color: 'success'
     });
   } catch (error) {
-    console.error('更新記帳本失敗：', error);
-    useToast().add({
-      title: '更新失敗',
-      description: '無法更新記帳本，請稍後再試',
-      color: 'error'
-    });
+    handleError(error, '無法更新記帳本，請稍後再試');
   }
 };
 </script>

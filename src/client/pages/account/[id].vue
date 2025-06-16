@@ -42,6 +42,7 @@ import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
 const router = useRouter();
 const route = useRoute();
 const { accountBooks, loadAccountBooks, updateBookTransactions } = useAccountBooks();
+const { handleError } = useErrorHandler();
 const accountBook = ref<AccountBook | null>(null);
 const selectedBookId = ref<string>(route.params.id as string);
 const selectedMonth = ref(new Date().toISOString().slice(0, 7));
@@ -79,7 +80,7 @@ watch(selectedBookId, async (newBookId) => {
     if (!hasPermission) return;
 
     transactionsInstance.value = useTransactions(newBookId);
-    transactionsInstance.value?.loadTransactions();
+    transactionsInstance.value?.loadTransactions().catch(handleError);
   } else {
     transactionsInstance.value = null;
   }
@@ -108,7 +109,7 @@ const handleAddTransaction = async (
   try {
     await transactionsInstance.value.addTransaction(transaction);
   } catch (error) {
-    console.error('新增交易記錄失敗：', error);
+    handleError(error, '新增交易記錄失敗');
   }
 };
 
@@ -118,17 +119,17 @@ const handleDeleteTransaction = async (id: string) => {
   try {
     await transactionsInstance.value.deleteTransaction(id);
   } catch (error) {
-    console.error('刪除交易記錄失敗：', error);
+    handleError(error, '刪除交易記錄失敗');
   }
 };
 
-const handleUpdateTransaction = async (updatedTransaction: Transaction) => {
+const handleUpdateTransaction = async (transaction: Transaction) => {
   if (!transactionsInstance.value) return;
   
   try {
-    await transactionsInstance.value.updateTransaction(updatedTransaction.id, updatedTransaction);
+    await transactionsInstance.value.updateTransaction(transaction.id, transaction);
   } catch (error) {
-    console.error('更新交易記錄失敗：', error);
+    handleError(error, '更新交易記錄失敗');
   }
 };
 
@@ -137,13 +138,18 @@ const handleClaimAll = async (recorder: Recorder) => {
   
   try {
     await transactionsInstance.value.updateTransactionsPaymentStatus(recorder, 'paid');
+    useToast().add({
+      title: '更新成功',
+      description: '已更新所有交易記錄的請款狀態',
+      color: 'success'
+    });
   } catch (error) {
-    console.error('更新請款狀態失敗：', error);
+    handleError(error, '更新請款狀態失敗');
   }
 };
 
-const handleImportExcel = async (transactions: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>[]) => {
-  if (!accountBook.value || !transactionsInstance.value) return;
+const handleImportExcel = async (transactions: Omit<Transaction, "id" | "createdAt" | "updatedAt">[]) => {
+  if (!transactionsInstance.value) return;
 
   try {
     // 過濾掉無效的資料
@@ -156,56 +162,43 @@ const handleImportExcel = async (transactions: Omit<Transaction, 'id' | 'created
       t.paymentStatus
     );
 
-    // 使用 transactionsInstance 來新增交易記錄
+    // 批次新增交易記錄
     for (const transaction of validTransactions) {
       await transactionsInstance.value.addTransaction(transaction);
     }
 
-    // 更新本地狀態
-    accountBook.value.updatedAt = new Date().toISOString();
-    accountBook.value.lastUpdatedBy = user.value?.uid;
-
     // 顯示成功訊息
-    if (validTransactions.length < transactions.length) {
-      useToast().add({
-        title: '部分資料已匯入',
-        description: `成功匯入 ${validTransactions.length} 筆，跳過 ${transactions.length - validTransactions.length} 筆無效資料`,
-        color: 'warning'
-      });
-    } else {
-      useToast().add({
-        title: '匯入成功',
-        description: `成功匯入 ${validTransactions.length} 筆資料`,
-        color: 'success'
-      });
-    }
-  } catch (error) {
-    console.error('匯入交易記錄失敗：', error);
     useToast().add({
-      title: '匯入失敗',
-      description: '匯入交易記錄時發生錯誤',
-      color: 'error'
+      title: '匯入成功',
+      description: `成功匯入 ${validTransactions.length} 筆交易記錄${validTransactions.length !== transactions.length ? `，跳過 ${transactions.length - validTransactions.length} 筆無效資料` : ''}`,
+      color: 'success'
     });
+  } catch (error) {
+    handleError(error, '匯入交易記錄失敗');
   }
 };
 
 // 載入記帳本資料
 onMounted(async () => {
-  await loadAccountBooks();
-  const bookId = route.params.id as string;
-  accountBook.value = accountBooks.value.find(book => book.id === bookId) || null;
-  
-  if (!accountBook.value) {
-    router.push('/accounts');
-    return;
-  }
+  try {
+    await loadAccountBooks();
+    const bookId = route.params.id as string;
+    accountBook.value = accountBooks.value.find(book => book.id === bookId) || null;
+    
+    if (!accountBook.value) {
+      router.push('/accounts');
+      return;
+    }
 
-  const hasPermission = await checkBookPermission();
-  if (!hasPermission) return;
+    const hasPermission = await checkBookPermission();
+    if (!hasPermission) return;
 
-  if (selectedBookId.value) {
-    transactionsInstance.value = useTransactions(selectedBookId.value);
-    await transactionsInstance.value?.loadTransactions();
+    if (selectedBookId.value) {
+      transactionsInstance.value = useTransactions(selectedBookId.value);
+      await transactionsInstance.value?.loadTransactions();
+    }
+  } catch (error) {
+    handleError(error, '載入記帳本資料失敗');
   }
 });
 </script> 
