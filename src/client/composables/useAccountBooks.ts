@@ -166,7 +166,6 @@ export const useAccountBooks = () => {
             } as AccountBook;
         } catch (error) {
             handleError(error, '新增記帳本失敗');
-            throw error;
         }
     };
 
@@ -208,7 +207,6 @@ export const useAccountBooks = () => {
             });
         } catch (error) {
             handleError(error, '新增共享使用者失敗');
-            throw error;
         }
     };
 
@@ -242,7 +240,6 @@ export const useAccountBooks = () => {
             });
         } catch (error) {
             handleError(error, '移除共享使用者失敗');
-            throw error;
         }
     };
 
@@ -299,7 +296,6 @@ export const useAccountBooks = () => {
             await deleteDoc(bookRef);
         } catch (error) {
             handleError(error, '刪除記帳本失敗');
-            throw error;
         }
     };
 
@@ -331,7 +327,6 @@ export const useAccountBooks = () => {
             });
         } catch (error) {
             handleError(error, '更新交易記錄失敗');
-            throw error;
         }
     };
 

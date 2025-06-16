@@ -175,7 +175,6 @@ export const useAuth = () => {
             };
         } catch (error) {
             handleError(error, '更新暱稱失敗');
-            throw error;
         }
     };
 

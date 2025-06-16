@@ -4,7 +4,6 @@ export const useErrorHandler = () => {
   const toast = useToast();
 
   const handleError = (error: unknown, defaultMessage = '發生錯誤，請稍後再試') => {
-    console.error('錯誤詳情：', error);
 
     let errorMessage = defaultMessage;
 
@@ -13,7 +12,7 @@ export const useErrorHandler = () => {
     } else if (typeof error === 'string') {
       errorMessage = error;
     }
-
+    alert(errorMessage);
     toast.add({
       title: '錯誤',
       description: errorMessage,
