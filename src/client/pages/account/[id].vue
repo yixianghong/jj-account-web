@@ -1,26 +1,29 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div class="flex flex-wrap justify-between items-center mb-8 gap-2">
-      <h1 class="text-3xl font-bold">{{ accountBook?.name || '記帳本' }}</h1>
-      <div class="flex items-center space-x-3">
-        <UButton
-          v-if="selectedBookId && accountBook"
-          color="primary"
-          icon="i-heroicons-plus"
-          @click="openTransactionDialog('add')"
-        >
-          新增記帳
-        </UButton>
-        <ImportExcel @import="handleImportExcel" />
+    <div class="grid grid-cols-3 items-center mb-8">
+      <div class="flex justify-start">
         <UButton
           color="neutral"
           variant="soft"
           icon="i-heroicons-arrow-left"
           @click="router.push('/accounts')"
-        >
-          返回列表
-        </UButton>
+        ></UButton>
       </div>
+      <h1 class="text-3xl font-bold text-center">{{ accountBook?.name || '記帳本' }}</h1>
+      
+    </div>
+    <div class="flex justify-end mb-8 gap-2">
+      <div>
+        <ImportExcel @import="handleImportExcel" />
+      </div>
+      <UButton
+        v-if="selectedBookId && accountBook"
+        color="primary"
+        icon="i-heroicons-plus"
+        @click="openTransactionDialog('add')"
+      >
+        新增記帳
+      </UButton>
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-2">
@@ -45,6 +48,7 @@
             @delete="handleDeleteTransaction"
             @update="handleUpdateTransaction"
             @edit="handleEditTransaction"
+            @reorder="handleReorderTransactions"
           />
         </div>
     </div>
@@ -55,6 +59,7 @@
 import { ref, computed, watch, onMounted } from "vue";
 import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
 import TransactionDialog from "~/components/TransactionDialog.vue";
+import { collection, doc, writeBatch } from 'firebase/firestore';
 
 const router = useRouter();
 const route = useRoute();
@@ -64,6 +69,7 @@ const accountBook = ref<AccountBook | null>(null);
 const selectedBookId = ref<string>(route.params.id as string);
 const selectedMonth = ref(new Date().toISOString().slice(0, 7));
 const { user } = useAuth();
+const { $firebase } = useNuxtApp();
 
 // 保存 useTransactions 實例
 const transactionsInstance = ref<ReturnType<typeof useTransactions> | null>(null);
@@ -226,6 +232,34 @@ const handleTransactionSubmit = async (transaction: Omit<Transaction, "id" | "cr
 
 const handleEditTransaction = (transaction: Transaction) => {
   openTransactionDialog('edit', transaction);
+};
+
+const handleReorderTransactions = async (transactions: Transaction[]) => {
+  if (!transactionsInstance.value) return;
+  
+  try {
+    // 更新本地狀態
+    transactionsInstance.value.transactions = transactions;
+    
+    // 更新資料庫中的順序
+    const batch = writeBatch($firebase.db);
+    const transactionsRef = collection($firebase.db, 'accountBooks', selectedBookId.value, 'transactions');
+    
+    transactions.forEach((transaction, index) => {
+      const docRef = doc(transactionsRef, transaction.id);
+      batch.update(docRef, { order: index });
+    });
+    
+    await batch.commit();
+    
+    useToast().add({
+      title: '更新成功',
+      description: '已更新交易記錄順序',
+      color: 'success'
+    });
+  } catch (error) {
+    handleError(error, '更新交易記錄順序失敗');
+  }
 };
 
 // 載入記帳本資料

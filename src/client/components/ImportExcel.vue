@@ -6,7 +6,7 @@
       icon="i-heroicons-arrow-up-tray"
       @click="showImportModal = true"
     >
-      匯入 Excel
+      Excel
     </UButton>
 
     <UModal v-model:open="showImportModal">
