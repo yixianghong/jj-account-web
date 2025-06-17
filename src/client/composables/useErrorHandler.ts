@@ -13,6 +13,7 @@ export const useErrorHandler = () => {
       errorMessage = error;
     }
     alert(errorMessage);
+    console.error(error);
     toast.add({
       title: '錯誤',
       description: errorMessage,
