@@ -39,6 +39,13 @@
               {{ transaction.type === "income" ? "+" : "-" }}${{ transaction.amount.toLocaleString() }}
             </div>
             <UButton
+              color="primary"
+              variant="ghost"
+              icon="i-heroicons-pencil-square"
+              size="xs"
+              @click="handleEdit(transaction)"
+            />
+            <UButton
               color="error"
               variant="ghost"
               icon="i-heroicons-trash"
@@ -68,6 +75,7 @@ defineProps<{
 const emit = defineEmits<{
   (e: "delete", id: string): void;
   (e: "update", transaction: Transaction): void;
+  (e: "edit", transaction: Transaction): void;
 }>();
 
 const handleDelete = (id: string) => {
@@ -87,5 +95,9 @@ const togglePaymentStatus = (transaction: Transaction) => {
     updatedAt: new Date().toISOString(),
   };
   emit("update", updatedTransaction);
+};
+
+const handleEdit = (transaction: Transaction) => {
+  emit("edit", transaction);
 };
 </script>

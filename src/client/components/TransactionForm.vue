@@ -1,6 +1,4 @@
 <template>
-  <div class="transaction-form">
-    <h2 class="text-xl font-bold mb-4">新增記帳</h2>
     <form class="space-y-4" @submit.prevent="handleSubmit">
       <div class="grid grid-cols-2 gap-4">
         <div>
@@ -95,10 +93,9 @@
         color="primary"
         block
       >
-        新增記帳
+        {{ submitButtonText || '新增記帳' }}
       </UButton>
     </form>
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -116,7 +113,9 @@ import { useAuth } from "~/composables/useAuth";
 import { useUsers } from '~/composables/useUsers'
 
 const props = defineProps<{
-  book: AccountBook | null
+  book: AccountBook | null;
+  initialData?: Transaction;
+  submitButtonText?: string;
 }>();
 
 const emit = defineEmits<{
@@ -160,13 +159,13 @@ watch(() => props.book, async (newBook) => {
 }, { immediate: true });
 
 const form = ref({
-  type: "expense" as TransactionType,
-  amount: 0,
-  category: "其他" as Category,
-  description: "",
-  date: new Date().toISOString().split("T")[0],
-  recorder: '',
-  paymentStatus: "pending" as PaymentStatus,
+  type: props.initialData?.type || "expense" as TransactionType,
+  amount: props.initialData?.amount || 0,
+  category: props.initialData?.category || "其他" as Category,
+  description: props.initialData?.description || "",
+  date: props.initialData?.date || new Date().toISOString().split("T")[0],
+  recorder: props.initialData?.recorder || '',
+  paymentStatus: props.initialData?.paymentStatus || "pending" as PaymentStatus,
 });
 
 // 監聽使用者狀態，更新預設記帳人

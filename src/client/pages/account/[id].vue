@@ -1,27 +1,42 @@
 <template>
   <div class="container mx-auto px-4 py-8">
-    <div class="flex justify-between items-center mb-8">
+    <div class="flex flex-wrap justify-between items-center mb-8 gap-2">
       <h1 class="text-3xl font-bold">{{ accountBook?.name || '記帳本' }}</h1>
-      <div class="flex items-center space-x-4">
+      <div class="flex items-center space-x-3">
+        <UButton
+          v-if="selectedBookId && accountBook"
+          color="primary"
+          icon="i-heroicons-plus"
+          @click="openTransactionDialog('add')"
+        >
+          新增記帳
+        </UButton>
         <ImportExcel @import="handleImportExcel" />
+        <UButton
+          color="neutral"
+          variant="soft"
+          icon="i-heroicons-arrow-left"
+          @click="router.push('/accounts')"
+        >
+          返回列表
+        </UButton>
       </div>
-      <UButton label="返回記帳本列表" color="neutral" variant="subtle" @click="router.push('/accounts')" />
     </div>
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-2">
-        <TransactionForm 
-          v-if="selectedBookId && accountBook" 
+        <TransactionDialog
+          v-model="showTransactionDialog"
+          :mode="dialogMode"
           :book="accountBook"
-          @submit="handleAddTransaction" 
+          :initial-data="selectedTransaction"
+          @submit="handleTransactionSubmit"
         />
-        <div class="mt-8">
-          <MonthlySummary
-            v-if="selectedBookId"
-            :transactions="transactions"
-            @month-change="handleMonthChange"
-            @claim-all="handleClaimAll"
-          />
-        </div>
+        <MonthlySummary
+          v-if="selectedBookId"
+          :transactions="transactions"
+          @month-change="handleMonthChange"
+          @claim-all="handleClaimAll"
+        />
       </div>
       <div class="lg:col-span-2">
           <TransactionList
@@ -29,6 +44,7 @@
             :transactions="filteredTransactions"
             @delete="handleDeleteTransaction"
             @update="handleUpdateTransaction"
+            @edit="handleEditTransaction"
           />
         </div>
     </div>
@@ -38,6 +54,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from "vue";
 import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
+import TransactionDialog from "~/components/TransactionDialog.vue";
 
 const router = useRouter();
 const route = useRoute();
@@ -50,6 +67,10 @@ const { user } = useAuth();
 
 // 保存 useTransactions 實例
 const transactionsInstance = ref<ReturnType<typeof useTransactions> | null>(null);
+
+const showTransactionDialog = ref(false);
+const dialogMode = ref<'add' | 'edit'>('add');
+const selectedTransaction = ref<Transaction | undefined>(undefined);
 
 // 檢查記帳本權限
 const checkBookPermission = async () => {
@@ -176,6 +197,35 @@ const handleImportExcel = async (transactions: Omit<Transaction, "id" | "created
   } catch (error) {
     handleError(error, '匯入交易記錄失敗');
   }
+};
+
+const openTransactionDialog = (mode: 'add' | 'edit', transaction?: Transaction) => {
+  dialogMode.value = mode;
+  selectedTransaction.value = transaction;
+  showTransactionDialog.value = true;
+};
+
+const handleTransactionSubmit = async (transaction: Omit<Transaction, "id" | "createdAt" | "updatedAt">) => {
+  if (!transactionsInstance.value) return;
+  
+  try {
+    if (dialogMode.value === 'add') {
+      await transactionsInstance.value.addTransaction(transaction);
+    } else if (dialogMode.value === 'edit' && selectedTransaction.value) {
+      await transactionsInstance.value.updateTransaction(selectedTransaction.value.id, {
+        ...transaction,
+        id: selectedTransaction.value.id,
+        createdAt: selectedTransaction.value.createdAt,
+        updatedAt: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    handleError(error, dialogMode.value === 'add' ? '新增交易記錄失敗' : '更新交易記錄失敗');
+  }
+};
+
+const handleEditTransaction = (transaction: Transaction) => {
+  openTransactionDialog('edit', transaction);
 };
 
 // 載入記帳本資料
