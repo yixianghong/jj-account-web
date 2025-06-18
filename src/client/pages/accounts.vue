@@ -22,66 +22,45 @@
         </form>
       </div>
 
-      <!-- 記帳本列表 -->
-      <div v-if="accountBooks.length > 0" class="grid gap-6">
-        <UCard v-for="book in accountBooks" :key="book.id" class="cursor-pointer hover:shadow-lg transition-shadow duration-300" @click="router.push(`/account/${book.id}`)">
-          <template #header>
-            <div class="flex justify-between items-start">
-              <div class="flex items-center">
-                <h2 class="text-xl font-semibold">{{ book.name }}</h2>
-                <UBadge color="primary" variant="soft" class="ml-2">{{ book.transactions?.length || 0 }} 筆</UBadge>
-              </div>
-              <div class="flex gap-2">
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  icon="i-heroicons-pencil-square"
-                  @click.stop="openEditDialog(book)"
-                ></UButton>
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  icon="i-heroicons-share"
-                  @click.stop="openShareDialog(book)"
-                >
-                </UButton>
-                <UButton
-                  color="error"
-                  variant="ghost"
-                  icon="i-heroicons-trash"
-                  @click.stop="handleDeleteBook(book.id)"
-                ></UButton>
-              </div>
-            </div>
-          </template>
-          <div class="text-gray-500 text-sm space-y-1">
-            <p>建立於：{{ new Date(book.createdAt).toLocaleDateString() }}</p>
-            <p v-if="book.updatedAt">
-              最後更新：{{ new Date(book.updatedAt).toLocaleDateString() }}
-              <span v-if="book.lastUpdatedBy">（{{ book.lastUpdatedBy }}）</span>
-            </p>
+      <!-- 記帳本列表（Splitwise 風格） -->
+      <div v-if="accountBooks.length > 0" class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <UCard
+          v-for="book in accountBooks"
+          :key="book.id"
+          class="relative group cursor-pointer hover:shadow-2xl transition-all duration-200 border-l-8 p-0"
+          :style="{ borderColor: getBookColor(book.id) }"
+          @click="router.push(`/account/${book.id}`)"
+        >
+          <!-- 操作按鈕區 -->
+          <div class="absolute top-3 right-3 z-10">
+            <UDropdownMenu
+              :items="getBookActions(book)"
+              :popper="{ placement: 'bottom-end' }"
+              class="!p-0"
+            >
+              <UButton icon="i-heroicons-ellipsis-vertical" size="sm" color="gray" variant="ghost" @click.stop />
+            </UDropdownMenu>
           </div>
-          <!-- 共享使用者列表 -->
-          <div v-if="book.sharedUsers && book.sharedUsers.length > 0" class="mt-4">
-            <h3 class="text-sm font-medium text-gray-700 mb-2">共享使用者：</h3>
-            <div class="flex flex-wrap gap-2">
-              <UBadge
-                v-for="email in book.sharedUsers"
-                :key="email"
-                color="neutral"
-                variant="soft"
-                class="flex items-center gap-2"
-              >
-                {{ email }}
-                <UButton
-                  color="neutral"
-                  variant="ghost"
-                  icon="i-heroicons-x-mark"
-                  size="xs"
-                  class="p-0"
-                  @click.stop="handleRemoveSharedUser(book.id, email)"
-                />
-              </UBadge>
+          <!-- 主要內容 -->
+          <div class="flex items-center gap-4 px-6 py-5">
+            <!-- 帳本顏色圓圈 -->
+            <div class="w-14 h-14 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow" :style="{ background: getBookColor(book.id) }">
+              {{ book.name[0] }}
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-lg font-bold truncate">{{ book.name }}</h2>
+                <UBadge color="primary" variant="soft">{{ book.transactions?.length || 0 }} 筆</UBadge>
+              </div>
+              <div class="text-xs text-gray-500 mt-1">
+                建立於：{{ new Date(book.createdAt).toLocaleDateString() }}
+              </div>
+              <!-- 成員頭像 -->
+              <div v-if="book.sharedUsers?.length" class="flex mt-2">
+                <div v-for="email in ([user?.email, ...book.sharedUsers].filter(e => !!e) as string[])" :key="email" class="w-7 h-7 rounded-full bg-gray-200 border-2 border-white -ml-2 flex items-center justify-center text-xs font-bold text-gray-700 shadow">
+                  {{ getAvatarText(email) }}
+                </div>
+              </div>
             </div>
           </div>
         </UCard>
@@ -106,7 +85,6 @@
                   placeholder="輸入使用者 Email"
                   required
                   class="w-full"
-                  
                 />
               </UFormField>
             </form>
@@ -188,6 +166,18 @@ const selectedBook = ref<AccountBook | null>(null);
 const showEditDialog = ref(false);
 const editBookName = ref('');
 const editingBook = ref<AccountBook | null>(null);
+
+// Splitwise 風格：帳本顏色（根據 id hash 產生顏色）
+function getBookColor(id: string) {
+  const colors = ['#4F8A8B', '#F9ED69', '#F08A5D', '#B83B5E', '#6A2C70', '#3B6978'];
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return colors[Math.abs(hash) % colors.length];
+}
+// 取 email 首字母大寫
+function getAvatarText(email: string) {
+  return email ? email[0].toUpperCase() : '?';
+}
 
 // 監聽使用者狀態，載入記帳本
 watch(user, (newUser) => {
@@ -314,4 +304,29 @@ const handleEditBook = async () => {
     handleError(error, '無法更新記帳本，請稍後再試');
   }
 };
+
+// Splitwise 風格：帳本操作選單
+function getBookActions(book: AccountBook) {
+  console.log(book);
+  return [
+    [
+      {
+        label: '編輯',
+        icon: 'i-heroicons-pencil-square',
+        onSelect: () => openEditDialog(book)
+      },
+      {
+        label: '共享',
+        icon: 'i-heroicons-share',
+        onSelect: () => openShareDialog(book)
+      },
+      {
+        label: '刪除',
+        icon: 'i-heroicons-trash',
+        class: 'text-red-500',
+        onSelect: () => handleDeleteBook(book.id)
+      }
+    ]
+  ];
+}
 </script>
