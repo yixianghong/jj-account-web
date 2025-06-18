@@ -1,30 +1,29 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-3 items-center mb-8">
-      <div class="flex justify-start">
+  <div class="container mx-auto px-2 py-4 sm:px-4 sm:py-8">
+    <!-- Splitwise 風格標題區 -->
+    <div class="relative flex justify-between mb-8">
+      <div class="flex items-center gap-2">
         <UButton
           color="neutral"
           variant="soft"
           icon="i-heroicons-arrow-left"
           @click="router.push('/accounts')"
-        ></UButton>
+        />
+      <h1 class="text-3xl font-extrabold text-center tracking-tight">{{ accountBook?.name || '記帳本' }}</h1>
       </div>
-      <h1 class="text-3xl font-bold text-center">{{ accountBook?.name || '記帳本' }}</h1>
-      
-    </div>
-    <div class="flex justify-end mb-8 gap-2">
-      <div>
+      <div class="flex items-center gap-2">
         <ImportExcel @import="handleImportExcel" />
+        <UButton
+          v-if="selectedBookId && accountBook"
+          color="primary"
+          variant="soft"
+          icon="i-heroicons-plus"
+          @click="openTransactionDialog('add')"
+        >新增帳目</UButton>
       </div>
-      <UButton
-        v-if="selectedBookId && accountBook"
-        color="primary"
-        icon="i-heroicons-plus"
-        @click="openTransactionDialog('add')"
-      >
-        新增記帳
-      </UButton>
     </div>
+
+    <!-- 主要內容區塊 -->
     <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
       <div class="lg:col-span-2">
         <TransactionDialog
@@ -50,8 +49,18 @@
             @edit="handleEditTransaction"
             @reorder="handleReorderTransactions"
           />
-        </div>
+      </div>
     </div>
+
+    <!-- 右下角浮動新增按鈕（桌面隱藏） -->
+    <UButton
+      v-if="selectedBookId && accountBook"
+      color="primary"
+      icon="i-heroicons-plus"
+      class="fixed bottom-6 right-6 z-50 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl text-3xl lg:hidden"
+      @click="openTransactionDialog('add')"
+      aria-label="新增記帳"
+    />
   </div>
 </template>
 

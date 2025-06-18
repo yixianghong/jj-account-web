@@ -1,64 +1,57 @@
 <template>
   <div class="transaction-list">
-    <h2 class="text-xl font-bold mb-4">記帳列表</h2>
-    <div class="space-y-4">
+    <!-- Splitwise 風格標題區 -->
+    <div class="flex flex-col items-center mb-6">
+      <h2 class="text-2xl font-extrabold text-center tracking-tight">記帳列表</h2>
+    </div>
+    <div class="space-y-6">
       <UCard
         v-for="transaction in transactions"
         :key="transaction.id"
-        class="w-full"
+        class="w-full relative flex flex-col p-0 overflow-hidden shadow-lg rounded-lg"
+        :style="{ borderLeft: '8px solid ' + (transaction.type === 'income' ? '#4F8A8B' : '#F08A5D') }"
       >
-        <div class="flex justify-between items-start">
-          <div>
-            <UBadge
-              :color="transaction.type === 'income' ? 'success' : 'error'"
-              variant="subtle"
-            >
-              {{ transaction.type === "income" ? "收入" : "支出" }}
-            </UBadge>
-            <UButton
-              v-if="transaction.type === 'expense'"
-              :color="transaction.paymentStatus === 'paid' ? 'primary' : 'warning'"
-              variant="subtle"
-              size="xs"
-              class="ml-2"
-              @click="togglePaymentStatus(transaction)"
-            >
-              {{ transaction.paymentStatus === "paid" ? "已請款" : "未請款" }}
-            </UButton>
-            <UBadge
-              v-else
-              color="neutral"
-              variant="subtle"
-              class="ml-2"
-            >
-              已請款
-            </UBadge>
-          </div>
-          <div class="flex items-center space-x-2">
-            <div class="text-lg font-bold">
-              {{ transaction.type === "income" ? "+" : "-" }}${{ transaction.amount.toLocaleString() }}
+        <div class="flex items-center justify-between px-6 pt-5">
+          <div class="flex items-center gap-4 min-w-0">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-lg font-bold truncate">{{ transaction.category }}</span>
+                <UBadge
+                  :color="transaction.type === 'income' ? 'success' : 'error'"
+                  variant="subtle"
+                >
+                  {{ transaction.type === "income" ? "收入" : "支出" }}
+                </UBadge>
+                <UButton
+                  v-if="transaction.type === 'expense'"
+                  :color="transaction.paymentStatus === 'paid' ? 'primary' : 'warning'"
+                  variant="subtle"
+                  size="xs"
+                  @click="togglePaymentStatus(transaction)"
+                >
+                  {{ transaction.paymentStatus === "paid" ? "已請款" : "未請款" }}
+                </UButton>
+              </div>
+              <div class="text-xs text-gray-500 truncate mt-1">{{ transaction.description }}</div>
             </div>
-            <UButton
-              color="primary"
-              variant="ghost"
-              icon="i-heroicons-pencil-square"
-              size="xs"
-              @click="handleEdit(transaction)"
-            />
-            <UButton
-              color="error"
-              variant="ghost"
-              icon="i-heroicons-trash"
-              size="xs"
-              @click="handleDelete(transaction.id)"
-            />
           </div>
+          <!-- ... 工具箱 -->
+          <UDropdownMenu
+            :items="getTransactionActions(transaction)"
+            :popper="{ placement: 'bottom-end' }"
+            class="!p-0"
+          >
+            <UButton icon="i-heroicons-ellipsis-vertical" size="sm" color="gray" variant="ghost" @click.stop />
+          </UDropdownMenu>
         </div>
-        <div class="mt-2 text-sm text-gray-600">
-          <div>分類：{{ transaction.category }}</div>
-          <div>描述：{{ transaction.description }}</div>
-          <div>記帳人：{{ transaction.recorder }}</div>
-          <div>日期：{{ transaction.date }}</div>
+        <div class="flex items-center justify-between px-6 pb-5 pt-2">
+          <div class="flex flex-col text-xs text-gray-600">
+            <span>記帳人：{{ transaction.recorder }}</span>
+            <span>日期：{{ transaction.date }}</span>
+          </div>
+          <div class="text-2xl font-extrabold" :class="transaction.type === 'income' ? 'text-success-600' : 'text-error-600'">
+            {{ transaction.type === "income" ? "+" : "-" }}${{ transaction.amount.toLocaleString() }}
+          </div>
         </div>
       </UCard>
     </div>
@@ -100,4 +93,22 @@ const togglePaymentStatus = (transaction: Transaction) => {
 const handleEdit = (transaction: Transaction) => {
   emit("edit", transaction);
 };
+
+function getTransactionActions(transaction: Transaction) {
+  return [
+    [
+      {
+        label: '編輯',
+        icon: 'i-heroicons-pencil-square',
+        onSelect: () => handleEdit(transaction)
+      },
+      {
+        label: '刪除',
+        icon: 'i-heroicons-trash',
+        class: 'text-red-500',
+        onSelect: () => handleDelete(transaction.id)
+      }
+    ]
+  ];
+}
 </script>

@@ -1,91 +1,70 @@
 <template>
   <div class="monthly-summary">
-    <div class="flex justify-between items-center mb-4">
-      <h2 class="text-xl font-bold">月度分析</h2>
-      <div class="flex items-center space-x-2">
-        <UButton
-          color="neutral"
-          variant="ghost"
-          icon="i-heroicons-chevron-left"
-          @click="changeMonth(-1)"
-        />
-        <UInput
-          v-model="selectedMonth"
-          type="month"
-          class="w-40"
-          @change="handleMonthChange"
-        />
-        <UButton
-          color="neutral"
-          variant="ghost"
-          icon="i-heroicons-chevron-right"
-          @click="changeMonth(1)"
-        />
-      </div>
+    <!-- Splitwise 風格標題區 -->
+    <div class="flex flex-col items-center mb-6">
+      <h2 class="text-2xl font-extrabold text-center tracking-tight">月度分析</h2>
     </div>
 
     <div class="grid grid-cols-3 gap-4 mb-6">
-      <UCard class="bg-success-50">
+      <UCard class="bg-success-50 rounded-lg shadow-md flex flex-col items-center py-2">
         <div class="text-sm text-success-700">總收入</div>
-        <div class="text-md font-bold text-success-900">
+        <div class="text-md font-extrabold text-success-900 mt-1">
           ${{ summary.totalIncome.toLocaleString() }}
         </div>
       </UCard>
-      <UCard class="bg-error-50">
+      <UCard class="bg-error-50 rounded-lg shadow-md flex flex-col items-center py-2">
         <div class="text-sm text-error-700">總支出</div>
-        <div class="text-md font-bold text-error-900">
+        <div class="text-md font-extrabold text-error-900 mt-1">
           ${{ summary.totalExpense.toLocaleString() }}
         </div>
       </UCard>
-      <UCard class="bg-primary-50">
+      <UCard class="bg-primary-50 rounded-lg shadow-md flex flex-col items-center py-2">
         <div class="text-sm text-primary-700">結餘</div>
-        <div class="text-md font-bold text-primary-900">
+        <div class="text-md font-extrabold text-primary-900 mt-1">
           ${{ summary.balance.toLocaleString() }}
         </div>
       </UCard>
     </div>
 
-    <div class="mt-6">
+    <UCard class="bg-white rounded-lg shadow p-4 mb-6">
       <h3 class="text-lg font-semibold mb-3">分類支出</h3>
       <div class="space-y-2">
-        <UCard
+        <div
           v-for="(amount, category) in summary.categorySummary"
           :key="category"
-          class="bg-gray-50"
+          class="flex justify-between items-center border-b last:border-b-0 py-2"
         >
-          <div class="flex justify-between items-center">
-            <span>{{ category }}</span>
-            <span class="font-medium">${{ amount?.toLocaleString() }}</span>
-          </div>
-        </UCard>
+          <span class="font-medium">{{ category }}</span>
+          <span class="font-bold text-error-600">${{ amount?.toLocaleString() }}</span>
+        </div>
+        <div v-if="Object.keys(summary.categorySummary).length === 0" class="text-gray-400 text-center py-2">本月尚無支出</div>
       </div>
-    </div>
+    </UCard>
 
-    <div class="mt-6">
+    <UCard class="bg-white rounded-lg shadow p-4">
       <h3 class="text-lg font-semibold mb-3">未請款金額</h3>
       <div class="space-y-2">
-        <UCard
+        <div
           v-for="(amount, recorder) in summary.pendingAmountByRecorder"
           :key="recorder"
-          class="bg-warning-50"
+          class="flex justify-between items-center border-b last:border-b-0 py-2"
         >
-          <div class="flex justify-between items-center">
-            <div class="flex items-center space-x-2">
-              <span>{{ recorder }}</span>
-              <UButton
-                v-if="amount > 0"
-                color="primary"
-                size="xs"
-                @click="handleClaimAll(recorder as Recorder)"
-              >
-                一鍵請領
-              </UButton>
-            </div>
-            <span class="font-medium">${{ amount.toLocaleString() }}</span>
+          <div class="flex items-center space-x-2">
+            <span class="font-medium">{{ recorder }}</span>
+            <UButton
+              v-if="amount > 0"
+              color="primary"
+              size="xs"
+              @click="handleClaimAll(recorder as Recorder)"
+            >
+              一鍵請領
+            </UButton>
           </div>
-        </UCard>
+          <span class="font-bold text-warning-600">${{ amount.toLocaleString() }}</span>
+        </div>
+        <div v-if="Object.keys(summary.pendingAmountByRecorder).length === 0" class="text-gray-400 text-center py-2">本月無未請款金額</div>
       </div>
-    </div>
+    </UCard>
   </div>
 </template>
 
