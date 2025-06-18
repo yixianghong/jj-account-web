@@ -81,7 +81,7 @@ const selectedTransaction = ref<Transaction | undefined>(undefined);
 // 檢查記帳本權限
 const checkBookPermission = async () => {
   if (!user.value) {
-    router.push('/login');
+    router.push('/');
     return false;
   }
 

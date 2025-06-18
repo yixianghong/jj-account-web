@@ -13,7 +13,7 @@ const router = useRouter()
 const handleLogout = async () => {
   try {
     await logout()
-    router.push('/login')
+    router.push('/')
   } catch (e) {
     console.error('登出失敗：', e)
   }

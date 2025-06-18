@@ -7,12 +7,12 @@ export default defineNuxtRouteMiddleware((to) => {
     }
 
     // 如果使用者未登入且不是前往登入頁面，則重定向到登入頁面
-    if (!user.value && to.path !== '/login') {
-        return navigateTo('/login')
+    if (!user.value && to.path !== '/') {
+        return navigateTo('/')
     }
 
     // 如果使用者已登入且前往登入頁面，則重定向到首頁
-    if (user.value && to.path === '/login') {
+    if (user.value && to.path === '/') {
         return navigateTo('/')
     }
 }) 

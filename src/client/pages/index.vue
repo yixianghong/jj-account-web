@@ -1,134 +1,134 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center">
-    <div v-if="!loading" class="text-center py-8">
-      <div v-if="accountBooks.length === 0">
-        <div class="mb-8">
-          <UIcon name="i-heroicons-book-open" class="w-24 h-24 text-primary-500 mx-auto" />
-        </div>
-        <h2 class="text-2xl font-bold mb-4">歡迎使用記帳本</h2>
-        <p class="text-gray-600 mb-4">請先建立一個記帳本來開始記帳</p>
-        <UButton
-          color="primary"
-          size="lg"
-          @click="showNewBookForm = true"
-        >
-          建立第一個記帳本
-        </UButton>
-      </div>
-    </div>
-    <div v-else class="text-center">
-      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-indigo-600" />
-      <p class="mt-2 text-gray-600">載入中...</p>
-    </div>
-
-    <!-- 新增記帳本表單 -->
-    <UModal
-      v-model:open="showNewBookForm"
-    >
+  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <UCard v-if="!loading" class="max-w-md w-full">
       <template #header>
-        <h3 class="text-lg font-medium leading-6 text-gray-900">
-          建立記帳本
-        </h3>
+        <h2 class="text-center text-3xl font-extrabold text-gray-900">
+          {{ isLogin ? '登入帳號' : '註冊帳號' }}
+        </h2>
       </template>
-      <template #body>
-        <UInput
-          v-model="bookForm.name"
-          type="text"
-          placeholder="記帳本名稱"
-          class="mb-4"
+
+      <form class="space-y-6" @submit.prevent="handleSubmit">
+        <UFormField label="電子郵件">
+          <UInput
+            v-model="email"
+            type="email"
+            placeholder="請輸入電子郵件"
+            required
+            class="w-full"
+          />
+        </UFormField>
+
+        <UFormField label="密碼">
+          <UInput
+            v-model="password"
+            type="password"
+            placeholder="請輸入密碼"
+            required
+            class="w-full"
+          />
+        </UFormField>
+
+        <UAlert
+          v-if="error"
+          color="error"
+          variant="soft"
+          :title="error"
         />
-      </template>
-      <template #footer>
-        <div class="flex justify-end gap-3">
+
+        <div class="space-y-4">
+          <UButton
+            type="submit"
+            color="primary"
+            block
+            :loading="loading"
+          >
+            {{ isLogin ? '登入' : '註冊' }}
+          </UButton>
+
+          <div class="relative">
+            <div class="absolute inset-0 flex items-center">
+              <div class="w-full border-t border-gray-300"/>
+            </div>
+            <div class="relative flex justify-center text-sm">
+              <span class="px-2 bg-gray-50 text-gray-500">或</span>
+            </div>
+          </div>
+
           <UButton
             color="neutral"
-            variant="ghost"
-            @click="showNewBookForm = false"
+            variant="outline"
+            block
+            :loading="loading"
+            @click="handleGoogleLogin"
           >
-            取消
-          </UButton>
-          <UButton
-            color="primary"
-            :loading="isSubmitting"
-            @click="handleSubmit"
-          >
-            建立
+            <template #leading>
+              <img
+                class="h-5 w-5"
+                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                alt="Google logo"
+              >
+            </template>
+            使用 Google 登入
           </UButton>
         </div>
-      </template>
-    </UModal>
+
+        <div class="text-center">
+          <UButton
+            color="neutral"
+            variant="link"
+            @click="isLogin = !isLogin"
+          >
+            {{ isLogin ? '還沒有帳號？點此註冊' : '已有帳號？點此登入' }}
+          </UButton>
+        </div>
+      </form>
+    </UCard>
+
+    <div v-else class="text-center">
+      <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary-600" />
+      <p class="mt-2 text-gray-600">載入中...</p>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { nextTick, ref, watch } from "vue";
+defineOptions({
+  layout: 'blank'
+})
 
-definePageMeta({
-  layout: 'empty'
-});
+const router = useRouter()
+const { user, login, register, loginWithGoogle, error, loading } = useAuth()
 
-const router = useRouter();
-const { user, loading: authLoading } = useAuth();
-const { accountBooks, loadAccountBooks, createBook } = useAccountBooks();
-const showNewBookForm = ref(false);
-const isSubmitting = ref(false);
-const loading = ref(true);
-const bookForm = ref({
-  name: "",
-});
-
-// 處理表單提交
-const handleSubmit = async () => {
-  if (!bookForm.value.name.trim()) {
-    alert('請輸入記帳本名稱');
-    return;
-  }
-
-  try {
-    isSubmitting.value = true;
-    const newBook = await createBook(bookForm.value.name);
-    
-    // 重新載入記帳本列表
-    await loadAccountBooks();
-    
-    // 重置表單
-    showNewBookForm.value = false;
-    bookForm.value.name = "";
-    
-    // 導向到新建立的記帳本
-    router.push(`/account/${newBook?.id}`);
-  } catch (error) {
-    console.error('建立記帳本失敗：', error);
-    alert('建立記帳本失敗，請稍後再試');
-  } finally {
-    isSubmitting.value = false;
-  }
-};
+const email = ref('')
+const password = ref('')
+const isLogin = ref(true)
 
 // 監聽登入狀態
-watch([user, authLoading], async ([newUser, newAuthLoading]) => {
-  if (newAuthLoading) return; // 等待認證狀態初始化完成
-
-  if (!newUser) {
-    router.push('/login');
-    return;
+watch(user, (newUser) => {
+  if (newUser) {
+    router.push('/accounts')
   }
+}, { immediate: true })
 
+const handleSubmit = async () => {
   try {
-    await loadAccountBooks();
-    console.log('載入後的記帳本：', accountBooks.value);
-    
-    // 等待下一個 tick，確保 accountBooks 已經更新
-    await nextTick();
-    
-    // 如果有記帳本，導向 /accounts
-    if (accountBooks.value.length > 0) {
-      router.push('/accounts');
+    if (isLogin.value) {
+      await login(email.value, password.value)
+    } else {
+      await register(email.value, password.value)
     }
-  } catch (error) {
-    console.error('載入記帳本失敗：', error);
-  } finally {
-    loading.value = false;
+    router.push('/accounts')
+  } catch (e) {
+    console.error('認證失敗：', e)
   }
-}, { immediate: true });
-</script>
+}
+
+const handleGoogleLogin = async () => {
+  try {
+    await loginWithGoogle()
+    router.push('/accounts')
+  } catch (e) {
+    console.error('Google 登入失敗：', e)
+  }
+}
+</script> 
