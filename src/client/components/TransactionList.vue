@@ -32,7 +32,7 @@
                   {{ transaction.paymentStatus === "paid" ? "已請款" : "未請款" }}
                 </UButton>
               </div>
-              <div class="text-xs text-gray-500 truncate mt-1">{{ transaction.description }}</div>
+              <div class="text-sm text-gray-500 truncate mt-1">{{ transaction.description }}</div>
             </div>
           </div>
           <!-- ... 工具箱 -->
@@ -45,11 +45,11 @@
           </UDropdownMenu>
         </div>
         <div class="flex items-center justify-between px-6 pb-5 pt-2">
-          <div class="flex flex-col text-xs text-gray-600">
+          <div class="flex flex-col text-sm text-gray-600">
             <span>記帳人：{{ transaction.recorder }}</span>
             <span>日期：{{ transaction.date }}</span>
           </div>
-          <div class="text-2xl font-extrabold" :class="transaction.type === 'income' ? 'text-success-600' : 'text-error-600'">
+          <div class="text-xl font-extrabold" :class="transaction.type === 'income' ? 'text-success-600' : 'text-error-600'">
             {{ transaction.type === "income" ? "+" : "-" }}${{ transaction.amount.toLocaleString() }}
           </div>
         </div>

@@ -161,7 +161,7 @@ watch(() => props.book, async (newBook) => {
 const form = ref({
   type: props.initialData?.type || "expense" as TransactionType,
   amount: props.initialData?.amount || 0,
-  category: props.initialData?.category || "其他" as Category,
+  category: props.initialData?.category || "飲食" as Category,
   description: props.initialData?.description || "",
   date: props.initialData?.date || new Date().toISOString().split("T")[0],
   recorder: props.initialData?.recorder || '',
@@ -192,7 +192,7 @@ const handleSubmit = () => {
   form.value = {
     type: "expense",
     amount: 0,
-    category: "其他",
+    category: "飲食",
     description: "",
     date: new Date().toISOString().split("T")[0],
     recorder: '',

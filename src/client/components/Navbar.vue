@@ -1,5 +1,28 @@
 <template>
-  <UNavigationMenu color="primary" :items="items" class="w-full px-4" />
+  <nav class="w-full px-4 py-2 flex items-center justify-between bg-white shadow-sm">
+    <!-- LOGO/APP名稱 -->
+    <div class="flex items-center gap-2 cursor-pointer" @click="router.push('/accounts')">
+      <img src="@/assets/imgs/icon.png" alt="Logo" class="w-8 h-8 rounded-lg" />
+      <span class="text-xl font-extrabold tracking-tight text-primary-700">記帳夥伴</span>
+    </div>
+    <!-- 使用者區塊 -->
+    <div class="flex items-center gap-3">
+      <template v-if="user">
+        <div class="flex items-center gap-2 px-2 py-1 rounded-full bg-gray-50 border border-gray-200">
+          <div class="w-8 h-8 rounded-full bg-primary-200 flex items-center justify-center text-primary-800 font-bold text-lg">
+            {{ user.displayName?.[0] || user.email?.[0] || 'U' }}
+          </div>
+          <span class="font-medium text-gray-700 max-w-[100px] truncate">{{ user.displayName || user.email }}</span>
+          <UDropdownMenu :items="userMenuItems" :popper="{ placement: 'bottom-end' }">
+            <UButton icon="i-lucide-chevron-down" variant="ghost" size="xs" class="ml-1" />
+          </UDropdownMenu>
+        </div>
+      </template>
+      <template v-else>
+        <UButton color="primary" to="/login">登入</UButton>
+      </template>
+    </div>
+  </nav>
 </template>
 
 <script setup>
@@ -19,32 +42,28 @@ const handleLogout = async () => {
   }
 }
 
-const items = computed(() => {
-  const baseItems = [
-    [
-      {
-        label: '記帳本',
-        icon: 'i-lucide-book-open',
-        to: '/accounts'
-      }
-    ]
+const navItems = [
+  [
+    {
+      label: '首頁',
+      icon: 'i-lucide-book-open',
+      to: '/accounts'
+    }
   ]
+]
 
-  if (user.value) {
-    // 已登入狀態
-    baseItems.push([
-      {
-        label: user.value.displayName || user.value.email || '使用者',
-        icon: 'i-lucide-user',
-        to: '/settings'
-      },
-      {
-        label: '登出',
-        icon: 'i-lucide-log-out',
-        onSelect: () => handleLogout()
-      }
-    ])
-  } 
-  return baseItems
-})
+const userMenuItems = [
+  [
+    {
+      label: '個人設定',
+      icon: 'i-lucide-user',
+      to: '/settings'
+    },
+    {
+      label: '登出',
+      icon: 'i-lucide-log-out',
+      onSelect: () => handleLogout()
+    }
+  ]
+]
 </script> 

@@ -6,17 +6,17 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
   
   /* 顏色系統 */
-  --ui-color-primary-50: #f0f7ff;
-  --ui-color-primary-100: #e0f0ff;
-  --ui-color-primary-200: #bae0ff;
-  --ui-color-primary-300: #7cc5ff;
-  --ui-color-primary-400: #36a9ff;
-  --ui-color-primary-500: #0090ff;
-  --ui-color-primary-600: #0077ff;
-  --ui-color-primary-700: #0066ff;
-  --ui-color-primary-800: #0055ff;
-  --ui-color-primary-900: #0044ff;
-  --ui-color-primary-950: #0033ff;
+  --ui-color-primary-50: #f3f7f7;
+  --ui-color-primary-100: #e3eded;
+  --ui-color-primary-200: #c2dddd;
+  --ui-color-primary-300: #9ac7c8;
+  --ui-color-primary-400: #6faeaf;
+  --ui-color-primary-500: #4F8A8B;
+  --ui-color-primary-600: #417273;
+  --ui-color-primary-700: #355b5c;
+  --ui-color-primary-800: #294545;
+  --ui-color-primary-900: #1d2f2f;
+  --ui-color-primary-950: #142020;
 
   /* 中性色 */
   --color-neutral-50: #f5f5f7;
