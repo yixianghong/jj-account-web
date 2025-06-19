@@ -48,7 +48,7 @@
       v-if="selectedBookId && accountBook"
       color="primary"
       icon="i-heroicons-plus"
-      class="fixed bottom-6 right-6 z-50 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl text-3xl lg:hidden"
+      class="fixed bottom-6 right-6 z-50 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl text-3xl"
       @click="openTransactionDialog('add')"
       aria-label="新增記帳"
     />

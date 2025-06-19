@@ -44,15 +44,12 @@ export default defineNuxtConfig({
   },
   nitro: {
     preset: 'static',
-    prerender: {
-      ignore: ['/favicon.ico']
-    }
   },
   app: {
     head: {
-      title: '記帳本',
+      title: '記帳夥伴',
       meta: [
-        { name: 'description', content: '記帳本' },
+        { name: 'description', content: '記帳,共享,分析' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' }
       ],
       link: [
