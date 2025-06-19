@@ -4,56 +4,49 @@
     <div class="flex flex-col items-center mb-6">
       <h2 class="text-2xl font-extrabold text-center tracking-tight">記帳列表</h2>
     </div>
-    <div class="space-y-6">
-      <UCard
-        v-for="transaction in transactions"
+    <div class="space-y-2">
+      <div 
+        v-for="transaction in transactions" 
         :key="transaction.id"
-        class="w-full relative flex flex-col p-0 overflow-hidden shadow-lg rounded-lg"
-        :style="{ borderLeft: '8px solid ' + (transaction.type === 'income' ? '#4F8A8B' : '#F08A5D') }"
+        class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors  group"
       >
-        <div class="flex items-center justify-between px-6 pt-5">
-          <div class="flex items-center gap-4 min-w-0">
-            <div class="min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="text-lg font-bold truncate">{{ transaction.category }}</span>
-                <UBadge
-                  :color="transaction.type === 'income' ? 'success' : 'error'"
-                  variant="subtle"
-                >
-                  {{ transaction.type === "income" ? "收入" : "支出" }}
-                </UBadge>
-                <UButton
-                  v-if="transaction.type === 'expense'"
-                  :color="transaction.paymentStatus === 'paid' ? 'primary' : 'warning'"
-                  variant="subtle"
-                  size="xs"
-                  @click="togglePaymentStatus(transaction)"
-                >
-                  {{ transaction.paymentStatus === "paid" ? "已請款" : "未請款" }}
-                </UButton>
-              </div>
-              <div class="text-sm text-gray-500 truncate mt-1">{{ transaction.description }}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span class="font-medium truncate">{{ transaction.category }}</span>
+            <UBadge :color="transaction.type === 'income' ? 'success' : 'error'" size="xs">
+              {{ transaction.type === "income" ? "收入" : "支出" }}
+            </UBadge>
+            <UButton
+              v-if="transaction.type === 'expense'"
+              :color="transaction.paymentStatus === 'paid' ? 'primary' : 'warning'"
+              variant="subtle"
+              size="xs"
+              @click="togglePaymentStatus(transaction)"
+            >
+              {{ transaction.paymentStatus === "paid" ? "已請款" : "未請款" }}
+            </UButton>
+          </div>
+          <div class="text-sm text-gray-500 truncate">{{ transaction.description }}</div>
+          <div class="text-xs text-gray-400 mt-1">{{ transaction.recorder }} • {{ transaction.date }}</div>
+        </div>
+        <div class="flex items-center gap-2 ml-4">
+          <div class="text-right">
+            <div class="font-bold" :class="transaction.type === 'income' ? 'text-success-600' : 'text-error-600'">
+              {{ transaction.type === "income" ? "+" : "-" }}${{ transaction.amount.toLocaleString() }}
             </div>
           </div>
-          <!-- ... 工具箱 -->
-          <UDropdownMenu
-            :items="getTransactionActions(transaction)"
-            :popper="{ placement: 'bottom-end' }"
-            class="!p-0"
-          >
-            <UButton icon="i-heroicons-ellipsis-vertical" size="sm" color="gray" variant="ghost" @click.stop />
-          </UDropdownMenu>
-        </div>
-        <div class="flex items-center justify-between px-6 pb-5 pt-2">
-          <div class="flex flex-col text-sm text-gray-600">
-            <span>記帳人：{{ transaction.recorder }}</span>
-            <span>日期：{{ transaction.date }}</span>
-          </div>
-          <div class="text-xl font-extrabold" :class="transaction.type === 'income' ? 'text-success-600' : 'text-error-600'">
-            {{ transaction.type === "income" ? "+" : "-" }}${{ transaction.amount.toLocaleString() }}
+          <!-- 操作按鈕 -->
+          <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+            <UDropdownMenu
+              :items="getTransactionActions(transaction)"
+              :popper="{ placement: 'bottom-end' }"
+              class="!p-0"
+            >
+              <UButton icon="i-heroicons-ellipsis-vertical" size="sm" color="gray" variant="ghost" @click.stop />
+            </UDropdownMenu>
           </div>
         </div>
-      </UCard>
+      </div>
     </div>
   </div>
 </template>

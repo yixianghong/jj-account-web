@@ -11,16 +11,7 @@
         />
       <h1 class="text-3xl font-extrabold text-center tracking-tight">{{ accountBook?.name || '記帳本' }}</h1>
       </div>
-      <div class="flex items-center gap-2">
-        <ImportExcel @import="handleImportExcel" />
-        <UButton
-          v-if="selectedBookId && accountBook"
-          color="primary"
-          variant="soft"
-          icon="i-heroicons-plus"
-          @click="openTransactionDialog('add')"
-        >新增帳目</UButton>
-      </div>
+      <ImportExcel @import="handleImportExcel" />
     </div>
 
     <!-- 主要內容區塊 -->
