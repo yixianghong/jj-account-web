@@ -13,9 +13,6 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2">
             <span class="font-medium truncate">{{ transaction.category }}</span>
-            <UBadge :color="transaction.type === 'income' ? 'success' : 'error'" size="xs">
-              {{ transaction.type === "income" ? "收入" : "支出" }}
-            </UBadge>
             <UButton
               v-if="transaction.type === 'expense'"
               :color="transaction.paymentStatus === 'paid' ? 'primary' : 'warning'"
@@ -42,7 +39,7 @@
               :popper="{ placement: 'bottom-end' }"
               class="!p-0"
             >
-              <UButton icon="i-heroicons-ellipsis-vertical" size="sm" color="gray" variant="ghost" @click.stop />
+              <UButton icon="i-heroicons-ellipsis-vertical" size="sm" color="neutral" variant="ghost" @click.stop />
             </UDropdownMenu>
           </div>
         </div>

@@ -73,7 +73,7 @@
             <span class="font-medium">{{ recorder }}</span>
             <UButton
               v-if="amount > 0"
-              color="primary"
+              color="warning"
               size="xs"
               @click="handleClaimAll(recorder as Recorder)"
             >
