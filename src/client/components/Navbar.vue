@@ -19,7 +19,7 @@
         </div>
       </template>
       <template v-else>
-        <UButton color="primary" to="/login">登入</UButton>
+        <UButton color="primary" to="/">登入</UButton>
       </template>
     </div>
   </nav>

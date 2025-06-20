@@ -6,6 +6,11 @@
         mode: 'out-in',
       }" />
     </NuxtLayout>
+    <!-- PWA 安裝提示 -->
+    <PwaInstallPrompt />
+    <!-- PWA 更新提示 -->
+    <PwaUpdatePrompt />
+    <VitePwaManifest />
   </div>
 </template>
 

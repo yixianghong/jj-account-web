@@ -19,6 +19,7 @@ export default defineNuxtConfig({
     "@nuxt/ui",
     "@nuxt/icon",
     "@nuxt/image",
+    "@vite-pwa/nuxt",
   ],
   css: ["~/assets/css/main.css"],
   image: {
@@ -56,5 +57,69 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }
       ]
     }
-  }
+  },
+  pwa: {
+    registerType: 'autoUpdate',
+    workbox: {
+      navigateFallback: '/',
+      globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
+    },
+    client: {
+      installPrompt: true,
+    },
+    devOptions: {
+      enabled: true,
+      suppressWarnings: true,
+      navigateFallbackAllowlist: [/^\/$/],
+      type: 'module',
+    },
+    manifest: {
+      name: '記帳夥伴',
+      short_name: '記帳夥伴',
+      description: '記帳,共享,分析',
+      theme_color: '#ffffff',
+      background_color: '#ffffff',
+      display: 'standalone',
+      orientation: 'portrait',
+      scope: '/',
+      start_url: '/',
+      icons: [
+        {
+          src: 'icons/icon-192x192.png',
+          sizes: '192x192',
+          type: 'image/png',
+          purpose: 'any maskable'
+        },
+        {
+          src: 'icons/icon-512x512.png',
+          sizes: '512x512',
+          type: 'image/png',
+          purpose: 'any maskable'
+        },
+      ],
+      screenshots: [
+        {
+          "src": "screenshots/home.png",
+          "type": "image/png",
+          "sizes": "540x720",
+          "form_factor": "narrow",
+          "label": "首頁記帳輸入"
+        },
+        {
+          "src": "screenshots/summary.png",
+          "type": "image/png",
+          "sizes": "1080x1600",
+          "form_factor": "narrow",
+          "label": "支出分析總覽"
+        },
+        {
+          "src": "screenshots/desktop.png",
+          "type": "image/png",
+          "sizes": "1600x900",
+          "form_factor": "wide",
+          "label": "桌面版介面"
+        }
+      ]
+    },
+  },
 });
