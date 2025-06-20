@@ -33,7 +33,7 @@
             </div>
           </div>
           <!-- 操作按鈕 -->
-          <div class="opacity-0 group-hover:opacity-100 transition-opacity">
+          <div>
             <UDropdownMenu
               :items="getTransactionActions(transaction)"
               :popper="{ placement: 'bottom-end' }"
