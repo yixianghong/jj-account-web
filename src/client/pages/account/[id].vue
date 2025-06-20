@@ -40,6 +40,16 @@
             @edit="handleEditTransaction"
             @reorder="handleReorderTransactions"
           />
+          <!-- 載入更多按鈕 -->
+          <div v-if="transactionsInstance?.hasMore" class="mt-4 text-center">
+            <UButton
+              :loading="transactionsInstance?.loading"
+              @click="handleLoadMore"
+              variant="outline"
+            >
+              載入更多
+            </UButton>
+          </div>
       </div>
     </div>
 
@@ -63,7 +73,7 @@ import { collection, doc, writeBatch } from 'firebase/firestore';
 
 const router = useRouter();
 const route = useRoute();
-const { accountBooks, loadAccountBooks, updateBookTransactions } = useAccountBooks();
+const { accountBooks, loadAccountBooks } = useAccountBooks();
 const { handleError } = useErrorHandler();
 const accountBook = ref<AccountBook | null>(null);
 const selectedBookId = ref<string>(route.params.id as string);
@@ -107,7 +117,8 @@ watch(selectedBookId, async (newBookId) => {
     if (!hasPermission) return;
 
     transactionsInstance.value = useTransactions(newBookId);
-    transactionsInstance.value?.loadTransactions().catch(handleError);
+    // 載入當前月份的資料
+    await transactionsInstance.value?.loadTransactionsByMonth(selectedMonth.value);
   } else {
     transactionsInstance.value = null;
   }
@@ -121,11 +132,20 @@ const transactions = computed(() => {
 // 取得過濾後的交易記錄
 const filteredTransactions = computed(() => {
   if (!transactionsInstance.value) return [];
-  return transactionsInstance.value.getTransactionsByMonth(selectedMonth.value);
+  return transactionsInstance.value.transactions;
 });
 
-const handleMonthChange = (month: string) => {
+const handleMonthChange = async (month: string) => {
   selectedMonth.value = month;
+  
+  if (transactionsInstance.value) {
+    try {
+      // 載入指定月份的交易記錄
+      await transactionsInstance.value.loadTransactionsByMonth(month);
+    } catch (error) {
+      handleError(error, '載入月份交易記錄失敗');
+    }
+  }
 };
 
 const handleAddTransaction = async (
@@ -262,6 +282,16 @@ const handleReorderTransactions = async (transactions: Transaction[]) => {
   }
 };
 
+const handleLoadMore = async () => {
+  if (!transactionsInstance.value) return;
+  
+  try {
+    await transactionsInstance.value.loadMore();
+  } catch (error) {
+    handleError(error, '載入更多交易記錄失敗');
+  }
+};
+
 // 載入記帳本資料
 onMounted(async () => {
   try {
@@ -279,7 +309,8 @@ onMounted(async () => {
 
     if (selectedBookId.value) {
       transactionsInstance.value = useTransactions(selectedBookId.value);
-      await transactionsInstance.value?.loadTransactions();
+      // 載入當前月份的資料
+      await transactionsInstance.value?.loadTransactionsByMonth(selectedMonth.value);
     }
   } catch (error) {
     handleError(error, '載入記帳本資料失敗');

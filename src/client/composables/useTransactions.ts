@@ -13,6 +13,7 @@ export const useTransactions = (bookId: string) => {
     const loading = ref(false);
     const hasMore = ref(true);
     const lastDoc = ref<any>(null);
+    const currentMonth = ref<string>('');
     let unsubscribe: (() => void) | null = null;
 
     // 等待認證狀態初始化完成
@@ -66,7 +67,75 @@ export const useTransactions = (bookId: string) => {
         }
     };
 
-    // 載入交易記錄（分頁載入）
+    // 載入指定月份的交易記錄
+    const loadTransactionsByMonth = async (month: string, pageSize: number = 50) => {
+        try {
+            loading.value = true;
+            const hasPermission = await checkBookPermission();
+            if (!hasPermission) return;
+
+            // 重置分頁狀態
+            if (currentMonth.value !== month) {
+                resetPagination();
+                currentMonth.value = month;
+            }
+
+            // 檢查快取
+            const cacheKey = `transactions_${bookId}_${month}_${pageSize}_${lastDoc.value?.id || 'initial'}`;
+            if (hasCache(cacheKey)) {
+                const cachedData = getCache<{ transactions: Transaction[], hasMore: boolean, lastDoc: any }>(cacheKey);
+                if (cachedData) {
+                    transactions.value = lastDoc.value ? [...transactions.value, ...cachedData.transactions] : cachedData.transactions;
+                    hasMore.value = cachedData.hasMore;
+                    lastDoc.value = cachedData.lastDoc;
+                    return;
+                }
+            }
+
+            const transactionsRef = collection($firebase.db, 'accountBooks', bookId, 'transactions');
+            
+            // 建立月份範圍查詢
+            const startDate = `${month}-01`;
+            const endDate = `${month}-31`;
+            
+            let q = query(
+                transactionsRef, 
+                where('date', '>=', startDate),
+                where('date', '<=', endDate),
+                orderBy('date', 'desc'),
+                limit(pageSize)
+            );
+            
+            if (lastDoc.value) {
+                q = query(q, startAfter(lastDoc.value));
+            }
+
+            const snapshot = await getDocs(q);
+            const newTransactions = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Transaction[];
+
+            transactions.value = lastDoc.value ? [...transactions.value, ...newTransactions] : newTransactions;
+            hasMore.value = snapshot.docs.length === pageSize;
+            lastDoc.value = snapshot.docs[snapshot.docs.length - 1] || null;
+
+            // 設定快取
+            setCache(cacheKey, {
+                transactions: newTransactions,
+                hasMore: hasMore.value,
+                lastDoc: lastDoc.value
+            }, 5 * 60 * 1000); // 5分鐘快取
+
+        } catch (error) {
+            handleError(error, '載入交易記錄失敗');
+            throw error;
+        } finally {
+            loading.value = false;
+        }
+    };
+
+    // 載入所有交易記錄（分頁載入）
     const loadTransactions = async (pageSize: number = 20) => {
         try {
             loading.value = true;
@@ -74,7 +143,7 @@ export const useTransactions = (bookId: string) => {
             if (!hasPermission) return;
 
             // 檢查快取
-            const cacheKey = `transactions_${bookId}_${pageSize}_${lastDoc.value?.id || 'initial'}`;
+            const cacheKey = `transactions_${bookId}_all_${pageSize}_${lastDoc.value?.id || 'initial'}`;
             if (hasCache(cacheKey)) {
                 const cachedData = getCache<{ transactions: Transaction[], hasMore: boolean, lastDoc: any }>(cacheKey);
                 if (cachedData) {
@@ -120,7 +189,12 @@ export const useTransactions = (bookId: string) => {
     // 載入更多交易記錄
     const loadMore = async (pageSize: number = 20) => {
         if (loading.value || !hasMore.value) return;
-        await loadTransactions(pageSize);
+        
+        if (currentMonth.value) {
+            await loadTransactionsByMonth(currentMonth.value, pageSize);
+        } else {
+            await loadTransactions(pageSize);
+        }
     };
 
     // 設定即時監聽（只監聽最新的交易）
@@ -280,7 +354,9 @@ export const useTransactions = (bookId: string) => {
         transactions,
         loading,
         hasMore,
+        currentMonth,
         loadTransactions,
+        loadTransactionsByMonth,
         loadMore,
         setupRealtimeListener,
         addTransaction,
