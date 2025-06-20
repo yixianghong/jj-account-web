@@ -1,6 +1,6 @@
 import { ref, onUnmounted } from 'vue';
 import type { AccountBook } from '~/types/accounting';
-import { collection, addDoc, updateDoc, deleteDoc, doc, query, onSnapshot, where, getDoc, getDocs } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, query, onSnapshot, where, getDoc } from 'firebase/firestore';
 import { useAuth } from '~/composables/useAuth';
 import { useErrorHandler } from '~/composables/useErrorHandler';
 
@@ -26,7 +26,7 @@ export const useAccountBooks = () => {
         }
     };
 
-    // 載入記帳本資料並設定即時監聽
+    // 載入記帳本資料並設定即時監聽（不包含交易記錄）
     const loadAccountBooks = async () => {
         await waitForAuth();
 
@@ -37,6 +37,7 @@ export const useAccountBooks = () => {
 
         try {
             const booksRef = collection($firebase.db, 'accountBooks');
+            
             // 查詢使用者擁有的記帳本
             const ownedBooksQuery = query(
                 booksRef,
@@ -57,23 +58,20 @@ export const useAccountBooks = () => {
                 let sharedLoaded = false;
 
                 // 監聽使用者擁有的記帳本
-                unsubscribeOwned = onSnapshot(ownedBooksQuery, async (snapshot) => {
-                    const books = await Promise.all(snapshot.docs.map(async doc => {
+                unsubscribeOwned = onSnapshot(ownedBooksQuery, (snapshot) => {
+                    const books = snapshot.docs.map(doc => {
                         const bookData = doc.data();
-                        // 載入交易記錄
-                        const transactionsRef = collection($firebase.db, 'accountBooks', doc.id, 'transactions');
-                        const transactionsSnapshot = await getDocs(transactionsRef);
-                        const transactions = transactionsSnapshot.docs.map(txDoc => ({
-                            id: txDoc.id,
-                            ...txDoc.data()
-                        }));
-
                         return {
                             id: doc.id,
-                            ...bookData,
-                            transactions
+                            name: bookData.name,
+                            userId: bookData.userId,
+                            sharedUsers: bookData.sharedUsers || [],
+                            transactions: [], // 不載入交易記錄，節省讀取次數
+                            createdAt: bookData.createdAt,
+                            updatedAt: bookData.updatedAt,
+                            lastUpdatedBy: bookData.lastUpdatedBy
                         } as AccountBook;
-                    }));
+                    });
 
                     ownedBooks = books;
                     ownedLoaded = true;
@@ -96,23 +94,20 @@ export const useAccountBooks = () => {
                 });
 
                 // 監聽共享的記帳本
-                unsubscribeShared = onSnapshot(sharedBooksQuery, async (snapshot) => {
-                    const books = await Promise.all(snapshot.docs.map(async doc => {
+                unsubscribeShared = onSnapshot(sharedBooksQuery, (snapshot) => {
+                    const books = snapshot.docs.map(doc => {
                         const bookData = doc.data();
-                        // 載入交易記錄
-                        const transactionsRef = collection($firebase.db, 'accountBooks', doc.id, 'transactions');
-                        const transactionsSnapshot = await getDocs(transactionsRef);
-                        const transactions = transactionsSnapshot.docs.map(txDoc => ({
-                            id: txDoc.id,
-                            ...txDoc.data()
-                        }));
-
                         return {
                             id: doc.id,
-                            ...bookData,
-                            transactions
+                            name: bookData.name,
+                            userId: bookData.userId,
+                            sharedUsers: bookData.sharedUsers || [],
+                            transactions: [], // 不載入交易記錄，節省讀取次數
+                            createdAt: bookData.createdAt,
+                            updatedAt: bookData.updatedAt,
+                            lastUpdatedBy: bookData.lastUpdatedBy
                         } as AccountBook;
-                    }));
+                    });
 
                     sharedBooks = books;
                     sharedLoaded = true;
@@ -299,37 +294,6 @@ export const useAccountBooks = () => {
         }
     };
 
-    // 更新記帳本中的交易記錄
-    const updateBookTransactions = async (bookId: string, transactions: AccountBook['transactions']) => {
-        await waitForAuth();
-
-        if (!user.value) {
-            handleError('使用者未登入');
-            return;
-        }
-
-        try {
-            const bookRef = doc($firebase.db, 'accountBooks', bookId);
-            const bookDoc = await getDoc(bookRef);
-
-            if (!bookDoc.exists()) {
-                throw new Error('記帳本不存在');
-            }
-
-            const bookData = bookDoc.data() as AccountBook;
-            if (bookData.userId !== user.value.uid) {
-                throw new Error('沒有權限修改此記帳本');
-            }
-            console.log('transactions', transactions);
-            await updateDoc(bookRef, {
-                transactions,
-                updatedAt: new Date().toISOString(),
-            });
-        } catch (error) {
-            handleError(error, '更新交易記錄失敗');
-        }
-    };
-
     // 清理即時監聽
     const cleanup = () => {
         if (unsubscribeOwned) {
@@ -353,7 +317,6 @@ export const useAccountBooks = () => {
         createBook,
         updateBook,
         deleteBook,
-        updateBookTransactions,
         addSharedUser,
         removeSharedUser,
         cleanup

@@ -50,7 +50,6 @@
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2 flex-wrap">
                 <h2 class="text-lg font-bold truncate">{{ book.name }}</h2>
-                <UBadge color="primary" variant="soft">{{ book.transactions?.length || 0 }} 筆</UBadge>
               </div>
               <div class="text-xs text-gray-500 mt-1">
                 建立於：{{ new Date(book.createdAt).toLocaleDateString() }}
