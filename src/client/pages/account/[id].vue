@@ -66,7 +66,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
 import TransactionDialog from "~/components/TransactionDialog.vue";
 import { collection, doc, writeBatch } from 'firebase/firestore';
@@ -117,9 +117,14 @@ watch(selectedBookId, async (newBookId) => {
     if (!hasPermission) return;
 
     transactionsInstance.value = useTransactions(newBookId);
-    // 載入當前月份的資料
+    // 先載入當前月份的資料
     await transactionsInstance.value?.loadTransactionsByMonth(selectedMonth.value);
+    // 再設定即時監聽
+    await transactionsInstance.value?.setupRealtimeListener();
   } else {
+    if (transactionsInstance.value) {
+      transactionsInstance.value.cleanup();
+    }
     transactionsInstance.value = null;
   }
 });
@@ -136,12 +141,14 @@ const filteredTransactions = computed(() => {
 });
 
 const handleMonthChange = async (month: string) => {
-  selectedMonth.value = month;
-  
   if (transactionsInstance.value) {
     try {
-      // 載入指定月份的交易記錄
+      // 先更新月份
+      selectedMonth.value = month;
+      // 重新載入指定月份的交易記錄
       await transactionsInstance.value.loadTransactionsByMonth(month);
+      // 重新設定即時監聽
+      await transactionsInstance.value.setupRealtimeListener();
     } catch (error) {
       handleError(error, '載入月份交易記錄失敗');
     }
@@ -309,11 +316,20 @@ onMounted(async () => {
 
     if (selectedBookId.value) {
       transactionsInstance.value = useTransactions(selectedBookId.value);
-      // 載入當前月份的資料
+      // 先載入當前月份的資料
       await transactionsInstance.value?.loadTransactionsByMonth(selectedMonth.value);
+      // 再設定即時監聽
+      await transactionsInstance.value?.setupRealtimeListener();
     }
   } catch (error) {
     handleError(error, '載入記帳本資料失敗');
+  }
+});
+
+// 組件卸載時清理資源
+onUnmounted(() => {
+  if (transactionsInstance.value) {
+    transactionsInstance.value.cleanup();
   }
 });
 </script> 

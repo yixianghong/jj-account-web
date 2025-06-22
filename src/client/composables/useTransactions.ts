@@ -203,8 +203,26 @@ export const useTransactions = (bookId: string) => {
             const hasPermission = await checkBookPermission();
             if (!hasPermission) return;
 
+            // 先清理舊的監聽器
+            cleanup();
+
             const transactionsRef = collection($firebase.db, 'accountBooks', bookId, 'transactions');
-            const q = query(transactionsRef, orderBy('date', 'desc'), limit(10)); // 只監聽最新的10筆
+            
+            // 根據是否有指定月份來設定查詢
+            let q;
+            if (currentMonth.value) {
+                const startDate = `${currentMonth.value}-01`;
+                const endDate = `${currentMonth.value}-31`;
+                q = query(
+                    transactionsRef,
+                    where('date', '>=', startDate),
+                    where('date', '<=', endDate),
+                    orderBy('date', 'desc'),
+                    limit(100) // 增加限制以確保能載入足夠的資料
+                );
+            } else {
+                q = query(transactionsRef, orderBy('date', 'desc'), limit(50));
+            }
 
             unsubscribe = onSnapshot(q, (snapshot) => {
                 const realtimeTransactions = snapshot.docs.map(doc => ({
@@ -212,15 +230,15 @@ export const useTransactions = (bookId: string) => {
                     ...doc.data()
                 })) as Transaction[];
 
-                // 更新現有交易記錄
-                const existingIds = new Set(transactions.value.map(t => t.id));
-                const newTransactions = realtimeTransactions.filter(t => !existingIds.has(t.id));
+                // 直接更新交易記錄列表
+                transactions.value = realtimeTransactions;
                 
-                if (newTransactions.length > 0) {
-                    transactions.value = [...newTransactions, ...transactions.value];
-                    // 清除相關快取
-                    removeCache(`transactions_${bookId}_*`);
-                }
+                // 更新分頁狀態
+                hasMore.value = snapshot.docs.length >= (currentMonth.value ? 100 : 50);
+                lastDoc.value = snapshot.docs[snapshot.docs.length - 1] || null;
+
+                // 清除相關快取
+                removeCache(`transactions_${bookId}_*`);
             }, (error) => {
                 handleError(error, '監聽交易記錄失敗');
             });
