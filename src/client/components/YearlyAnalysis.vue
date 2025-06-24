@@ -1,10 +1,5 @@
 <template>
   <div class="yearly-analysis">
-    <!-- Splitwise 風格標題區 -->
-    <div class="flex flex-col items-center mb-6">
-      <h2 class="text-2xl font-extrabold text-center tracking-tight">年度分析</h2>
-    </div>
-
     <!-- 月份選擇器 -->
     <div class="flex items-center justify-center mb-6">
       <div class="flex items-center space-x-2">
@@ -46,21 +41,21 @@
     <div v-else>
       <!-- 年度統計卡片 -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <UCard class="bg-success-50 rounded-2xl shadow-md flex flex-col items-center py-4">
+        <UCard class="bg-success-50 rounded-lg shadow-md flex flex-col items-center py-2">
           <div class="text-sm text-success-700">年度總收入</div>
-          <div class="text-2xl font-extrabold text-success-900 mt-1">
+          <div class="text-lg font-extrabold text-success-900 mt-1">
             ${{ yearlySummary.totalIncome.toLocaleString() }}
           </div>
         </UCard>
-        <UCard class="bg-error-50 rounded-2xl shadow-md flex flex-col items-center py-4">
+        <UCard class="bg-error-50 rounded-lg shadow-md flex flex-col items-center py-2">
           <div class="text-sm text-error-700">年度總支出</div>
-          <div class="text-2xl font-extrabold text-error-900 mt-1">
+          <div class="text-lg font-extrabold text-error-900 mt-1">
             ${{ yearlySummary.totalExpense.toLocaleString() }}
           </div>
         </UCard>
-        <UCard class="bg-primary-50 rounded-2xl shadow-md flex flex-col items-center py-4">
+        <UCard class="bg-primary-50 rounded-lg shadow-md flex flex-col items-center py-2">
           <div class="text-sm text-primary-700">年度結餘</div>
-          <div class="text-2xl font-extrabold text-primary-900 mt-1">
+          <div class="text-lg font-extrabold text-primary-900 mt-1">
             ${{ yearlySummary.balance.toLocaleString() }}
           </div>
         </UCard>
@@ -78,35 +73,30 @@
         </div>
       </UCard>
 
-      <!-- 年度分類統計 -->
+      <!-- 年度分類統計 - 圓餅圖 -->
       <UCard class="bg-white rounded-2xl shadow p-4 mb-6">
         <h3 class="text-lg font-semibold mb-3">年度分類支出</h3>
-        <div class="space-y-2">
-          <div
-            v-for="(amount, category) in yearlySummary.categorySummary"
-            :key="category"
-            class="flex justify-between items-center border-b last:border-b-0 py-2"
-          >
-            <span class="font-medium">{{ category }}</span>
-            <span class="font-bold text-error-600">${{ amount?.toLocaleString() }}</span>
+        <div v-if="Object.keys(yearlySummary.categorySummary).length === 0" class="text-gray-400 text-center py-8">今年尚無支出</div>
+        <div v-else class="grid grid-cols-1 gap-6">
+          <!-- 圓餅圖 -->
+          <div class="h-64">
+            <Pie
+              :data="pieChartData"
+              :options="pieChartOptions"
+              class="w-full h-full"
+            />
           </div>
-          <div v-if="Object.keys(yearlySummary.categorySummary).length === 0" class="text-gray-400 text-center py-2">今年尚無支出</div>
-        </div>
-      </UCard>
-
-      <!-- 年度記帳人統計 -->
-      <UCard class="bg-white rounded-2xl shadow p-4">
-        <h3 class="text-lg font-semibold mb-3">年度記帳人統計</h3>
-        <div class="space-y-2">
-          <div
-            v-for="(amount, recorder) in yearlySummary.recorderSummary"
-            :key="recorder"
-            class="flex justify-between items-center border-b last:border-b-0 py-2"
-          >
-            <span class="font-medium">{{ recorder }}</span>
-            <span class="font-bold text-primary-600">${{ amount.toLocaleString() }}</span>
+          <!-- 分類列表 -->
+          <div class="space-y-2">
+            <div
+              v-for="(amount, category) in yearlySummary.categorySummary"
+              :key="category"
+              class="flex justify-between items-center border-b last:border-b-0 py-2"
+            >
+              <span class="font-medium">{{ category }}</span>
+              <span class="font-bold text-error-600">${{ amount?.toLocaleString() }}</span>
+            </div>
           </div>
-          <div v-if="Object.keys(yearlySummary.recorderSummary).length === 0" class="text-gray-400 text-center py-2">今年尚無記帳記錄</div>
         </div>
       </UCard>
     </div>
@@ -115,7 +105,7 @@
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { Line } from 'vue-chartjs';
+import { Line, Pie } from 'vue-chartjs';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -125,7 +115,8 @@ import {
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  ArcElement
 } from 'chart.js';
 
 // 註冊 Chart.js 元件
@@ -137,7 +128,8 @@ ChartJS.register(
   Title,
   Tooltip,
   Legend,
-  Filler
+  Filler,
+  ArcElement
 );
 
 const props = defineProps<{
@@ -215,6 +207,32 @@ const chartData = computed(() => ({
   ]
 }));
 
+// 圓餅圖資料配置
+const pieChartData = computed(() => {
+  const categories = Object.keys(yearlySummary.value.categorySummary);
+  const amounts = Object.values(yearlySummary.value.categorySummary);
+  
+  // 定義顏色陣列
+  const colors = [
+    '#4F8A8B', '#F9ED69', '#F08A5D', '#B83B5E', '#6A2C70', '#3B6978',
+    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD'
+  ];
+
+  return {
+    labels: categories,
+    datasets: [
+      {
+        data: amounts,
+        backgroundColor: colors.slice(0, categories.length),
+        borderColor: '#ffffff',
+        borderWidth: 2,
+        hoverBorderWidth: 3,
+        hoverOffset: 10
+      }
+    ]
+  };
+});
+
 // Chart.js 選項配置
 const chartOptions: any = {
   responsive: true,
@@ -270,6 +288,42 @@ const chartOptions: any = {
   interaction: {
     intersect: false,
     mode: 'index' as const
+  }
+};
+
+// 圓餅圖選項配置
+const pieChartOptions: any = {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'bottom' as const,
+      labels: {
+        usePointStyle: true,
+        padding: 15,
+        font: {
+          size: 12
+        }
+      }
+    },
+    tooltip: {
+      backgroundColor: 'rgba(0, 0, 0, 0.8)',
+      titleColor: '#ffffff',
+      bodyColor: '#ffffff',
+      borderColor: '#4F8A8B',
+      borderWidth: 1,
+      cornerRadius: 8,
+      displayColors: true,
+      callbacks: {
+        label: function(context: any) {
+          const label = context.label || '';
+          const value = context.parsed;
+          const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);
+          const percentage = ((value / total) * 100).toFixed(1);
+          return `${label}: $${value.toLocaleString()} (${percentage}%)`;
+        }
+      }
+    }
   }
 };
 </script> 

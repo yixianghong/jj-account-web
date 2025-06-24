@@ -1,8 +1,7 @@
 <template>
   <div class="monthly-summary">
     <!-- Splitwise 風格標題區（含月份選擇器） -->
-    <div class="flex items-center justify-between mb-6">
-      <h2 class="text-2xl font-extrabold text-center tracking-tight flex-1">月度分析</h2>
+    <div class="flex items-center justify-center mb-6">
       <div class="flex items-center space-x-2">
         <UButton
           color="neutral"
@@ -13,7 +12,7 @@
         <UInput
           v-model="selectedMonth"
           type="month"
-          class="w-28"
+          class="w-32"
           @change="handleMonthChange"
         />
         <UButton
