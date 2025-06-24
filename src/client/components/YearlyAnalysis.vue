@@ -5,6 +5,37 @@
       <h2 class="text-2xl font-extrabold text-center tracking-tight">年度分析</h2>
     </div>
 
+    <!-- 月份選擇器 -->
+    <div class="flex items-center justify-center mb-6">
+      <div class="flex items-center space-x-2">
+        <UButton
+          color="neutral"
+          variant="ghost"
+          icon="i-heroicons-chevron-left"
+          @click="handlePrevMonth"
+        />
+        <UInput
+          v-model="selectedYear"
+          type="month"
+          class="w-32"
+          @change="handleMonthChange"
+        />
+        <UButton
+          color="neutral"
+          variant="ghost"
+          icon="i-heroicons-chevron-right"
+          @click="handleNextMonth"
+        />
+      </div>
+    </div>
+
+    <!-- 日期範圍顯示 -->
+    <div class="text-center mb-6">
+      <div class="text-sm text-gray-600">
+        分析期間：{{ yearlySummary.dateRange.startMonth }} 至 {{ yearlySummary.dateRange.endMonth }}
+      </div>
+    </div>
+
     <!-- 載入中狀態 -->
     <div v-if="loading" class="flex justify-center items-center py-8">
       <UIcon name="i-heroicons-arrow-path" class="animate-spin text-2xl text-primary-500" />
@@ -135,6 +166,20 @@ watch(() => props.accountId, (newAccountId) => {
   }
 });
 
+const handleMonthChange = () => {
+  loadYearlyTransactions(props.accountId, selectedYear.value);
+};
+
+const handlePrevMonth = () => {
+  const newMonth = changeYear(-1);
+  loadYearlyTransactions(props.accountId, newMonth);
+};
+
+const handleNextMonth = () => {
+  const newMonth = changeYear(1);
+  loadYearlyTransactions(props.accountId, newMonth);
+};
+
 // Chart.js 資料配置
 const chartData = computed(() => ({
   labels: yearlySummary.value.monthlyData.labels,
@@ -204,7 +249,9 @@ const chartOptions: any = {
         drawBorder: false
       },
       ticks: {
-        color: '#6b7280'
+        color: '#6b7280',
+        maxRotation: 45,
+        minRotation: 45
       }
     },
     y: {

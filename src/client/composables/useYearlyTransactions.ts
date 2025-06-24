@@ -5,14 +5,28 @@ import { useCache } from '~/composables/useCache';
 
 export const useYearlyTransactions = () => {
   const yearlyTransactions = ref<Transaction[]>([]);
-  const selectedYear = ref(new Date().getFullYear().toString());
+  const selectedYear = ref(new Date().toISOString().slice(0, 7)); // 改為月份格式
   const loading = ref(false);
   const { set: setCache, get: getCache, has: hasCache, remove: removeCache } = useCache();
 
-  // 載入指定年度的資料
-  const loadYearlyTransactions = async (accountId: string, year?: string) => {
-    if (year) {
-      selectedYear.value = year;
+  // 計算滾動年度的開始和結束日期
+  const getRollingYearRange = (endMonth: string) => {
+    const [endYear, endMonthNum] = endMonth.split('-').map(Number);
+    const startDate = new Date(endYear, endMonthNum - 1 - 11, 1); // 往前推11個月
+    const endDate = new Date(endYear, endMonthNum, 0); // 當月最後一天
+    
+    return {
+      startDate: `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-01`,
+      endDate: `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`,
+      startMonth: `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}`,
+      endMonth: `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`
+    };
+  };
+
+  // 載入指定滾動年度的資料
+  const loadYearlyTransactions = async (accountId: string, endMonth?: string) => {
+    if (endMonth) {
+      selectedYear.value = endMonth;
     }
     
     loading.value = true;
@@ -29,8 +43,7 @@ export const useYearlyTransactions = () => {
       }
 
       const { $firebase } = useNuxtApp();
-      const startDate = `${selectedYear.value}-01-01`;
-      const endDate = `${selectedYear.value}-12-31`;
+      const { startDate, endDate } = getRollingYearRange(selectedYear.value);
 
       const transactionsRef = collection($firebase.db, 'accountBooks', accountId, 'transactions');
       const q = query(
@@ -76,11 +89,13 @@ export const useYearlyTransactions = () => {
     }
   };
 
-  // 切換年度
+  // 切換年度（往前或往後一個月）
   const changeYear = (delta: number) => {
-    const newYear = parseInt(selectedYear.value) + delta;
-    selectedYear.value = newYear.toString();
-    return selectedYear.value;
+    const [year, month] = selectedYear.value.split("-").map(Number);
+    const newDate = new Date(year, month - 1 + delta, 1);
+    const newMonth = `${newDate.getFullYear()}-${String(newDate.getMonth() + 1).padStart(2, '0')}`;
+    selectedYear.value = newMonth;
+    return newMonth;
   };
 
   // 計算年度統計
@@ -105,17 +120,24 @@ export const useYearlyTransactions = () => {
       return acc;
     }, {} as Record<string, number>);
 
-    // 生成月度資料
+    // 生成月度資料（12個月）
     const monthlyData = {
       labels: [] as string[],
       incomeData: [] as number[],
       expenseData: [] as number[]
     };
 
-    for (let month = 1; month <= 12; month++) {
-      const monthStr = month.toString().padStart(2, '0');
+    const { startMonth, endMonth } = getRollingYearRange(selectedYear.value);
+    const [startYear, startMonthNum] = startMonth.split('-').map(Number);
+    const [endYear, endMonthNum] = endMonth.split('-').map(Number);
+
+    // 生成12個月的標籤和資料
+    for (let i = 0; i < 12; i++) {
+      const currentDate = new Date(startYear, startMonthNum - 1 + i, 1);
+      const monthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+      
       const monthTransactions = yearlyTransactions.value.filter(t => 
-        t.date.startsWith(`${selectedYear.value}-${monthStr}`)
+        t.date.startsWith(monthStr)
       );
       
       const monthIncome = monthTransactions
@@ -126,7 +148,9 @@ export const useYearlyTransactions = () => {
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
 
-      monthlyData.labels.push(`${month}月`);
+      // 顯示格式：2024年1月
+      const displayLabel = `${currentDate.getFullYear()}年${currentDate.getMonth() + 1}月`;
+      monthlyData.labels.push(displayLabel);
       monthlyData.incomeData.push(monthIncome);
       monthlyData.expenseData.push(monthExpense);
     }
@@ -137,7 +161,11 @@ export const useYearlyTransactions = () => {
       balance: totalIncome - totalExpense,
       categorySummary,
       recorderSummary,
-      monthlyData
+      monthlyData,
+      dateRange: {
+        startMonth,
+        endMonth
+      }
     };
   });
 
@@ -149,5 +177,6 @@ export const useYearlyTransactions = () => {
     changeYear,
     yearlySummary,
     clearCache,
+    getRollingYearRange,
   };
 }; 

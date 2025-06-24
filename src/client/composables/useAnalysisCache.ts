@@ -13,9 +13,15 @@ export const useAnalysisCache = () => {
       removeCache(monthlyCacheKey);
     }
 
-    // 清除年度分析快取
-    const yearlyCacheKey = `yearly_transactions_${accountId}_${currentYear}`;
-    removeCache(yearlyCacheKey);
+    // 清除年度分析快取（滾動年度）
+    // 清除最近24個月的年度快取，確保覆蓋所有可能的滾動年度
+    for (let i = -12; i <= 12; i++) {
+      const date = new Date();
+      date.setMonth(date.getMonth() + i);
+      const yearMonth = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const yearlyCacheKey = `yearly_transactions_${accountId}_${yearMonth}`;
+      removeCache(yearlyCacheKey);
+    }
 
     console.log(`已清除記帳本 ${accountId} 的分析快取`);
   };
