@@ -1,11 +1,13 @@
 import { ref, computed } from 'vue';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import type { Transaction, Category, Recorder } from '~/types/accounting';
+import { useCache } from '~/composables/useCache';
 
 export const useMonthlyTransactions = () => {
   const monthlyTransactions = ref<Transaction[]>([]);
   const selectedMonth = ref(new Date().toISOString().slice(0, 7));
   const loading = ref(false);
+  const { set: setCache, get: getCache, has: hasCache, remove: removeCache } = useCache();
 
   // 載入指定月份的資料
   const loadMonthlyTransactions = async (accountId: string, month?: string) => {
@@ -15,6 +17,17 @@ export const useMonthlyTransactions = () => {
     
     loading.value = true;
     try {
+      // 檢查快取
+      const cacheKey = `monthly_transactions_${accountId}_${selectedMonth.value}`;
+      if (hasCache(cacheKey)) {
+        const cachedData = getCache<Transaction[]>(cacheKey);
+        if (cachedData) {
+          monthlyTransactions.value = cachedData;
+          loading.value = false;
+          return;
+        }
+      }
+
       const { $firebase } = useNuxtApp();
       const [year, monthNum] = selectedMonth.value.split('-').map(Number);
       const startDate = `${year}-${monthNum.toString().padStart(2, '0')}-01`;
@@ -39,11 +52,28 @@ export const useMonthlyTransactions = () => {
       });
 
       monthlyTransactions.value = transactions;
+
+      // 設定快取（10分鐘）
+      setCache(cacheKey, transactions, 10 * 60 * 1000);
+
     } catch (error) {
       console.error('載入月度資料失敗:', error);
       monthlyTransactions.value = [];
     } finally {
       loading.value = false;
+    }
+  };
+
+  // 清除快取
+  const clearCache = (accountId?: string) => {
+    if (accountId) {
+      // 清除特定記帳本的快取
+      const cacheKey = `monthly_transactions_${accountId}_${selectedMonth.value}`;
+      removeCache(cacheKey);
+    } else {
+      // 清除所有月度快取
+      const cacheKey = `monthly_transactions_${accountId}_${selectedMonth.value}`;
+      removeCache(cacheKey);
     }
   };
 
@@ -96,5 +126,6 @@ export const useMonthlyTransactions = () => {
     loadMonthlyTransactions,
     changeMonth,
     monthlySummary,
+    clearCache,
   };
 }; 

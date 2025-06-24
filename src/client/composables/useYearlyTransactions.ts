@@ -1,11 +1,13 @@
 import { ref, computed } from 'vue';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
 import type { Transaction, Category, Recorder } from '~/types/accounting';
+import { useCache } from '~/composables/useCache';
 
 export const useYearlyTransactions = () => {
   const yearlyTransactions = ref<Transaction[]>([]);
   const selectedYear = ref(new Date().getFullYear().toString());
   const loading = ref(false);
+  const { set: setCache, get: getCache, has: hasCache, remove: removeCache } = useCache();
 
   // 載入指定年度的資料
   const loadYearlyTransactions = async (accountId: string, year?: string) => {
@@ -15,6 +17,17 @@ export const useYearlyTransactions = () => {
     
     loading.value = true;
     try {
+      // 檢查快取
+      const cacheKey = `yearly_transactions_${accountId}_${selectedYear.value}`;
+      if (hasCache(cacheKey)) {
+        const cachedData = getCache<Transaction[]>(cacheKey);
+        if (cachedData) {
+          yearlyTransactions.value = cachedData;
+          loading.value = false;
+          return;
+        }
+      }
+
       const { $firebase } = useNuxtApp();
       const startDate = `${selectedYear.value}-01-01`;
       const endDate = `${selectedYear.value}-12-31`;
@@ -38,11 +51,28 @@ export const useYearlyTransactions = () => {
       });
 
       yearlyTransactions.value = transactions;
+
+      // 設定快取（15分鐘）
+      setCache(cacheKey, transactions, 15 * 60 * 1000);
+
     } catch (error) {
       console.error('載入年度資料失敗:', error);
       yearlyTransactions.value = [];
     } finally {
       loading.value = false;
+    }
+  };
+
+  // 清除快取
+  const clearCache = (accountId?: string) => {
+    if (accountId) {
+      // 清除特定記帳本的快取
+      const cacheKey = `yearly_transactions_${accountId}_${selectedYear.value}`;
+      removeCache(cacheKey);
+    } else {
+      // 清除所有年度快取
+      const cacheKey = `yearly_transactions_${accountId}_${selectedYear.value}`;
+      removeCache(cacheKey);
     }
   };
 
@@ -118,5 +148,6 @@ export const useYearlyTransactions = () => {
     loadYearlyTransactions,
     changeYear,
     yearlySummary,
+    clearCache,
   };
 }; 

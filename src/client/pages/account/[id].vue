@@ -69,6 +69,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from "vue";
 import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
 import TransactionDialog from "~/components/TransactionDialog.vue";
 import { collection, doc, writeBatch } from 'firebase/firestore';
+import { useAnalysisCache } from "~/composables/useAnalysisCache";
 
 const router = useRouter();
 const route = useRoute();
@@ -138,6 +139,10 @@ const handleAddTransaction = async (
   
   try {
     await transactionsInstance.value.addTransaction(transaction);
+    
+    // 清除相關分析快取
+    const { clearAccountAnalysisCache } = useAnalysisCache();
+    clearAccountAnalysisCache(selectedBookId.value);
   } catch (error) {
     handleError(error, '新增交易記錄失敗');
   }
@@ -148,6 +153,10 @@ const handleDeleteTransaction = async (id: string) => {
   
   try {
     await transactionsInstance.value.deleteTransaction(id);
+    
+    // 清除相關分析快取
+    const { clearAccountAnalysisCache } = useAnalysisCache();
+    clearAccountAnalysisCache(selectedBookId.value);
   } catch (error) {
     handleError(error, '刪除交易記錄失敗');
   }
@@ -158,6 +167,10 @@ const handleUpdateTransaction = async (transaction: Transaction) => {
   
   try {
     await transactionsInstance.value.updateTransaction(transaction.id, transaction);
+    
+    // 清除相關分析快取
+    const { clearAccountAnalysisCache } = useAnalysisCache();
+    clearAccountAnalysisCache(selectedBookId.value);
   } catch (error) {
     handleError(error, '更新交易記錄失敗');
   }
@@ -168,6 +181,11 @@ const handleClaimAll = async (recorder: Recorder) => {
   
   try {
     await transactionsInstance.value.updateTransactionsPaymentStatus(recorder, 'paid');
+    
+    // 清除相關分析快取
+    const { clearAccountAnalysisCache } = useAnalysisCache();
+    clearAccountAnalysisCache(selectedBookId.value);
+    
     useToast().add({
       title: '更新成功',
       description: '已更新所有交易記錄的請款狀態',
@@ -196,6 +214,10 @@ const handleImportExcel = async (transactions: Omit<Transaction, "id" | "created
     for (const transaction of validTransactions) {
       await transactionsInstance.value.addTransaction(transaction);
     }
+
+    // 清除相關分析快取
+    const { clearAccountAnalysisCache } = useAnalysisCache();
+    clearAccountAnalysisCache(selectedBookId.value);
 
     // 顯示成功訊息
     useToast().add({
@@ -228,6 +250,10 @@ const handleTransactionSubmit = async (transaction: Omit<Transaction, "id" | "cr
         updatedAt: new Date().toISOString()
       });
     }
+    
+    // 清除相關分析快取
+    const { clearAccountAnalysisCache } = useAnalysisCache();
+    clearAccountAnalysisCache(selectedBookId.value);
   } catch (error) {
     handleError(error, dialogMode.value === 'add' ? '新增交易記錄失敗' : '更新交易記錄失敗');
   }
