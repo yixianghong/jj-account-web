@@ -24,10 +24,9 @@
           :initial-data="selectedTransaction"
           @submit="handleTransactionSubmit"
         />
-        <MonthlySummary
+        <AnalysisContainer
           v-if="selectedBookId"
-          :transactions="transactions"
-          @month-change="handleMonthChange"
+          :account-id="selectedBookId"
           @claim-all="handleClaimAll"
         />
       </div>
@@ -77,11 +76,10 @@ const { accountBooks, loadAccountBooks } = useAccountBooks();
 const { handleError } = useErrorHandler();
 const accountBook = ref<AccountBook | null>(null);
 const selectedBookId = ref<string>(route.params.id as string);
-const selectedMonth = ref(new Date().toISOString().slice(0, 7));
 const { user } = useAuth();
 const { $firebase } = useNuxtApp();
 
-// 保存 useTransactions 實例
+// 保存 useTransactions 實例（僅用於交易列表）
 const transactionsInstance = ref<ReturnType<typeof useTransactions> | null>(null);
 
 const showTransactionDialog = ref(false);
@@ -110,16 +108,14 @@ const checkBookPermission = async () => {
   return true;
 };
 
-// 當選擇的記帳本改變時，重新初始化 useTransactions
+// 當選擇的記帳本改變時，重新初始化 useTransactions（僅用於交易列表）
 watch(selectedBookId, async (newBookId) => {
   if (newBookId) {
     const hasPermission = await checkBookPermission();
     if (!hasPermission) return;
 
     transactionsInstance.value = useTransactions(newBookId);
-    // 先載入當前月份的資料
-    await transactionsInstance.value?.loadTransactionsByMonth(selectedMonth.value);
-    // 再設定即時監聽
+    // 設定即時監聽
     await transactionsInstance.value?.setupRealtimeListener();
   } else {
     if (transactionsInstance.value) {
@@ -129,31 +125,11 @@ watch(selectedBookId, async (newBookId) => {
   }
 });
 
-// 取得交易記錄
-const transactions = computed(() => {
-  return transactionsInstance.value?.transactions || [];
-});
-
 // 取得過濾後的交易記錄
 const filteredTransactions = computed(() => {
   if (!transactionsInstance.value) return [];
   return transactionsInstance.value.transactions;
 });
-
-const handleMonthChange = async (month: string) => {
-  if (transactionsInstance.value) {
-    try {
-      // 先更新月份
-      selectedMonth.value = month;
-      // 重新載入指定月份的交易記錄
-      await transactionsInstance.value.loadTransactionsByMonth(month);
-      // 重新設定即時監聽
-      await transactionsInstance.value.setupRealtimeListener();
-    } catch (error) {
-      handleError(error, '載入月份交易記錄失敗');
-    }
-  }
-};
 
 const handleAddTransaction = async (
   transaction: Omit<Transaction, "id" | "createdAt" | "updatedAt">
@@ -316,9 +292,7 @@ onMounted(async () => {
 
     if (selectedBookId.value) {
       transactionsInstance.value = useTransactions(selectedBookId.value);
-      // 先載入當前月份的資料
-      await transactionsInstance.value?.loadTransactionsByMonth(selectedMonth.value);
-      // 再設定即時監聽
+      // 設定即時監聽
       await transactionsInstance.value?.setupRealtimeListener();
     }
   } catch (error) {

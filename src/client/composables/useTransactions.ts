@@ -135,6 +135,43 @@ export const useTransactions = (bookId: string) => {
         }
     };
 
+    // 載入年度資料（用於年度分析）
+    const loadYearlyData = async () => {
+        try {
+            const hasPermission = await checkBookPermission();
+            if (!hasPermission) return;
+
+            const currentYear = new Date().getFullYear();
+            const startDate = `${currentYear}-01-01`;
+            const endDate = `${currentYear}-12-31`;
+
+            const transactionsRef = collection($firebase.db, 'accountBooks', bookId, 'transactions');
+            const q = query(
+                transactionsRef,
+                where('date', '>=', startDate),
+                where('date', '<=', endDate),
+                orderBy('date', 'desc')
+            );
+
+            const snapshot = await getDocs(q);
+            const yearlyTransactions = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as Transaction[];
+
+            // 合併到現有交易記錄中，避免重複
+            const existingIds = new Set(transactions.value.map(t => t.id));
+            const newTransactions = yearlyTransactions.filter(t => !existingIds.has(t.id));
+            
+            if (newTransactions.length > 0) {
+                transactions.value = [...transactions.value, ...newTransactions];
+            }
+
+        } catch (error) {
+            handleError(error, '載入年度資料失敗');
+        }
+    };
+
     // 載入所有交易記錄（分頁載入）
     const loadTransactions = async (pageSize: number = 20) => {
         try {
@@ -375,6 +412,7 @@ export const useTransactions = (bookId: string) => {
         currentMonth,
         loadTransactions,
         loadTransactionsByMonth,
+        loadYearlyData,
         loadMore,
         setupRealtimeListener,
         addTransaction,
