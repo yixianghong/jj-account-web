@@ -33,7 +33,7 @@
       <div class="lg:col-span-2">
           <TransactionList
             v-if="selectedBookId"
-            :transactions="filteredTransactions"
+            :transactions="[...monthlyTransactions]"
             @delete="handleDeleteTransaction"
             @update="handleUpdateTransaction"
             @edit="handleEditTransaction"
@@ -65,11 +65,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, onMounted, onUnmounted, inject, provide } from "vue";
 import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
 import TransactionDialog from "~/components/TransactionDialog.vue";
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { useAnalysisCache } from "~/composables/useAnalysisCache";
+import { useMonthlyTransactions } from "~/composables/useMonthlyTransactions";
 
 const router = useRouter();
 const route = useRoute();
@@ -82,6 +83,13 @@ const { $firebase } = useNuxtApp();
 
 // 保存 useTransactions 實例（僅用於交易列表）
 const transactionsInstance = ref<ReturnType<typeof useTransactions> | null>(null);
+
+// 創建共享的月度交易實體
+const monthlyTransactionsInstance = useMonthlyTransactions();
+const { selectedMonth, monthlyTransactions } = monthlyTransactionsInstance;
+
+// 提供給子元件使用
+provide('monthlyTransactions', monthlyTransactionsInstance);
 
 const showTransactionDialog = ref(false);
 const dialogMode = ref<'add' | 'edit'>('add');
@@ -118,18 +126,15 @@ watch(selectedBookId, async (newBookId) => {
     transactionsInstance.value = useTransactions(newBookId);
     // 設定即時監聽
     await transactionsInstance.value?.setupRealtimeListener();
+    
+    // 載入月度資料
+    await monthlyTransactionsInstance.loadMonthlyTransactions(newBookId, selectedMonth.value);
   } else {
     if (transactionsInstance.value) {
       transactionsInstance.value.cleanup();
     }
     transactionsInstance.value = null;
   }
-});
-
-// 取得過濾後的交易記錄
-const filteredTransactions = computed(() => {
-  if (!transactionsInstance.value) return [];
-  return transactionsInstance.value.transactions;
 });
 
 const handleAddTransaction = async (
@@ -143,6 +148,10 @@ const handleAddTransaction = async (
     // 清除相關分析快取
     const { clearAccountAnalysisCache } = useAnalysisCache();
     clearAccountAnalysisCache(selectedBookId.value);
+    
+    // 清除月度分析快取並重新載入
+    monthlyTransactionsInstance.clearCache(selectedBookId.value);
+    await monthlyTransactionsInstance.loadMonthlyTransactions(selectedBookId.value, selectedMonth.value);
   } catch (error) {
     handleError(error, '新增交易記錄失敗');
   }
@@ -157,6 +166,10 @@ const handleDeleteTransaction = async (id: string) => {
     // 清除相關分析快取
     const { clearAccountAnalysisCache } = useAnalysisCache();
     clearAccountAnalysisCache(selectedBookId.value);
+    
+    // 清除月度分析快取並重新載入
+    monthlyTransactionsInstance.clearCache(selectedBookId.value);
+    await monthlyTransactionsInstance.loadMonthlyTransactions(selectedBookId.value, selectedMonth.value);
   } catch (error) {
     handleError(error, '刪除交易記錄失敗');
   }
@@ -171,6 +184,10 @@ const handleUpdateTransaction = async (transaction: Transaction) => {
     // 清除相關分析快取
     const { clearAccountAnalysisCache } = useAnalysisCache();
     clearAccountAnalysisCache(selectedBookId.value);
+    
+    // 清除月度分析快取並重新載入
+    monthlyTransactionsInstance.clearCache(selectedBookId.value);
+    await monthlyTransactionsInstance.loadMonthlyTransactions(selectedBookId.value, selectedMonth.value);
   } catch (error) {
     handleError(error, '更新交易記錄失敗');
   }
@@ -185,6 +202,10 @@ const handleClaimAll = async (recorder: Recorder) => {
     // 清除相關分析快取
     const { clearAccountAnalysisCache } = useAnalysisCache();
     clearAccountAnalysisCache(selectedBookId.value);
+    
+    // 清除月度分析快取並重新載入
+    monthlyTransactionsInstance.clearCache(selectedBookId.value);
+    await monthlyTransactionsInstance.loadMonthlyTransactions(selectedBookId.value, selectedMonth.value);
     
     useToast().add({
       title: '更新成功',
@@ -218,6 +239,10 @@ const handleImportExcel = async (transactions: Omit<Transaction, "id" | "created
     // 清除相關分析快取
     const { clearAccountAnalysisCache } = useAnalysisCache();
     clearAccountAnalysisCache(selectedBookId.value);
+    
+    // 清除月度分析快取並重新載入
+    monthlyTransactionsInstance.clearCache(selectedBookId.value);
+    await monthlyTransactionsInstance.loadMonthlyTransactions(selectedBookId.value, selectedMonth.value);
 
     // 顯示成功訊息
     useToast().add({
@@ -254,6 +279,10 @@ const handleTransactionSubmit = async (transaction: Omit<Transaction, "id" | "cr
     // 清除相關分析快取
     const { clearAccountAnalysisCache } = useAnalysisCache();
     clearAccountAnalysisCache(selectedBookId.value);
+    
+    // 清除月度分析快取並重新載入
+    monthlyTransactionsInstance.clearCache(selectedBookId.value);
+    await monthlyTransactionsInstance.loadMonthlyTransactions(selectedBookId.value, selectedMonth.value);
   } catch (error) {
     handleError(error, dialogMode.value === 'add' ? '新增交易記錄失敗' : '更新交易記錄失敗');
   }
@@ -320,6 +349,9 @@ onMounted(async () => {
       transactionsInstance.value = useTransactions(selectedBookId.value);
       // 設定即時監聽
       await transactionsInstance.value?.setupRealtimeListener();
+      
+      // 載入月度資料
+      await monthlyTransactionsInstance.loadMonthlyTransactions(selectedBookId.value, selectedMonth.value);
     }
   } catch (error) {
     handleError(error, '載入記帳本資料失敗');

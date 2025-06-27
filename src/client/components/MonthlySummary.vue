@@ -107,7 +107,9 @@ const emit = defineEmits<{
   (e: "claimAll", recorder: Recorder): void;
 }>();
 
-// 使用月度交易 composable
+// 使用注入的共享月度交易 composable
+const monthlyTransactionsInstance = inject('monthlyTransactions') as ReturnType<typeof useMonthlyTransactions> | undefined;
+
 const {
   monthlyTransactions,
   selectedMonth,
@@ -115,7 +117,7 @@ const {
   loadMonthlyTransactions,
   changeMonth,
   monthlySummary
-} = useMonthlyTransactions();
+} = monthlyTransactionsInstance || useMonthlyTransactions();
 
 // 初始化載入資料
 onMounted(() => {
