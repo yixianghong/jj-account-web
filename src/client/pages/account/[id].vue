@@ -39,16 +39,6 @@
             @edit="handleEditTransaction"
             @reorder="handleReorderTransactions"
           />
-          <!-- 載入更多按鈕 -->
-          <div v-if="transactionsInstance?.hasMore" class="mt-4 text-center">
-            <UButton
-              :loading="transactionsInstance?.loading"
-              @click="handleLoadMore"
-              variant="outline"
-            >
-              載入更多
-            </UButton>
-          </div>
       </div>
     </div>
 
@@ -317,16 +307,6 @@ const handleReorderTransactions = async (transactions: Transaction[]) => {
     });
   } catch (error) {
     handleError(error, '更新交易記錄順序失敗');
-  }
-};
-
-const handleLoadMore = async () => {
-  if (!transactionsInstance.value) return;
-  
-  try {
-    await transactionsInstance.value.loadMore();
-  } catch (error) {
-    handleError(error, '載入更多交易記錄失敗');
   }
 };
 
