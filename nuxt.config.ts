@@ -41,8 +41,6 @@ export default defineNuxtConfig({
       firebaseAppId: process.env.FIREBASE_APP_ID
     }
   },
-  ui: {
-  },
   nitro: {
     preset: 'static',
   },

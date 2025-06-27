@@ -53,7 +53,7 @@
         </UCard>
       </div>
 
-      <UCard class="bg-white rounded-lg shadow p-4 mb-6">
+      <UCard class="bg-white rounded-lg shadow p-2 mb-6">
         <h3 class="text-lg font-semibold mb-3">分類支出</h3>
         <div class="space-y-2">
           <div
@@ -68,7 +68,7 @@
         </div>
       </UCard>
 
-      <UCard class="bg-white rounded-lg shadow p-4">
+      <UCard class="bg-white rounded-lg shadow p-2">
         <h3 class="text-lg font-semibold mb-3">未請款金額</h3>
         <div class="space-y-2">
           <div
