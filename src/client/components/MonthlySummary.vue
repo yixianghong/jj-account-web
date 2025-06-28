@@ -38,6 +38,9 @@
           <div class="text-lg font-extrabold text-success-900 mt-1">
             ${{ monthlySummary.totalIncome.toLocaleString() }}
           </div>
+          <div v-if="monthlySummary.totalIncomeIncludingBalance !== monthlySummary.totalIncome" class="text-xs text-success-600 mt-1">
+            含結餘: ${{ monthlySummary.totalIncomeIncludingBalance.toLocaleString() }}
+          </div>
         </UCard>
         <UCard class="bg-error-50 rounded-lg shadow-md flex flex-col items-center py-2">
           <div class="text-sm text-error-700">總支出</div>

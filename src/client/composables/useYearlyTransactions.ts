@@ -100,8 +100,9 @@ export const useYearlyTransactions = () => {
 
   // 計算年度統計
   const yearlySummary = computed(() => {
+    // 排除「上期結餘」的收入項目
     const totalIncome = yearlyTransactions.value
-      .filter((t) => t.type === "income")
+      .filter((t) => t.type === "income" && t.category !== "上期結餘")
       .reduce((sum, t) => sum + t.amount, 0);
 
     const totalExpense = yearlyTransactions.value
@@ -115,10 +116,12 @@ export const useYearlyTransactions = () => {
         return acc;
       }, {} as Record<Category, number>);
 
-    const recorderSummary = yearlyTransactions.value.reduce((acc, t) => {
-      acc[t.recorder] = (acc[t.recorder] || 0) + t.amount;
-      return acc;
-    }, {} as Record<string, number>);
+    const recorderSummary = yearlyTransactions.value
+      .filter((t) => t.category !== "上期結餘")
+      .reduce((acc, t) => {
+        acc[t.recorder] = (acc[t.recorder] || 0) + t.amount;
+        return acc;
+      }, {} as Record<string, number>);
 
     // 生成月度資料（12個月）
     const monthlyData = {
@@ -140,8 +143,9 @@ export const useYearlyTransactions = () => {
         t.date.startsWith(monthStr)
       );
       
+      // 排除「上期結餘」的月度收入
       const monthIncome = monthTransactions
-        .filter(t => t.type === 'income')
+        .filter(t => t.type === 'income' && t.category !== '上期結餘')
         .reduce((sum, t) => sum + t.amount, 0);
       
       const monthExpense = monthTransactions

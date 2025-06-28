@@ -186,6 +186,16 @@ watch(
   }
 );
 
+// 當分類變更為「上期結餘」時，自動設定為已請款
+watch(
+  () => form.value.category,
+  (newCategory) => {
+    if (newCategory === "上期結餘") {
+      form.value.paymentStatus = "paid";
+    }
+  }
+);
+
 const handleSubmit = () => {
   emit("submit", { ...form.value });
   // 重置表單

@@ -88,7 +88,13 @@ export const useMonthlyTransactions = () => {
 
   // 計算月度統計
   const monthlySummary = computed(() => {
+    // 排除「上期結餘」的收入項目
     const totalIncome = monthlyTransactions.value
+      .filter((t) => t.type === "income" && t.category !== "上期結餘")
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // 包含「上期結餘」的完整收入（用於顯示）
+    const totalIncomeIncludingBalance = monthlyTransactions.value
       .filter((t) => t.type === "income")
       .reduce((sum, t) => sum + t.amount, 0);
 
@@ -112,8 +118,9 @@ export const useMonthlyTransactions = () => {
 
     return {
       totalIncome,
+      totalIncomeIncludingBalance, // 包含上期結餘的總收入
       totalExpense,
-      balance: totalIncome - totalExpense,
+      balance: totalIncomeIncludingBalance - totalExpense, // 結餘包含上期結餘
       categorySummary,
       pendingAmountByRecorder,
     };
