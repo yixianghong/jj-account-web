@@ -84,7 +84,7 @@
                 size="xs"
                 @click="handleClaimAll(recorder as Recorder)"
               >
-                一鍵請領
+                一鍵請款
               </UButton>
             </div>
             <span class="font-bold text-warning-600">${{ amount.toLocaleString() }}</span>
@@ -155,7 +155,7 @@ const handleNextMonth = () => {
 };
 
 const handleClaimAll = (recorder: Recorder) => {
-  if (confirm(`確定要請領 ${recorder} 的所有未請款項目嗎？`)) {
+  if (confirm(`確定要請款 ${recorder} 的所有未請款項目嗎？`)) {
     emit("claimAll", recorder);
   }
 };
