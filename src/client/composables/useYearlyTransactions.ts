@@ -171,12 +171,15 @@ export const useYearlyTransactions = () => {
 
   return {
     yearlyTransactions: readonly(yearlyTransactions),
-    selectedYear: readonly(selectedYear),
+    selectedYear,
     loading: readonly(loading),
     loadYearlyTransactions,
     changeYear,
     yearlySummary,
     clearCache,
     getRollingYearRange,
+    updateSelectedYear: (year: string) => {
+      selectedYear.value = year;
+    },
   };
 }; 

@@ -143,7 +143,8 @@ const {
   loading,
   loadYearlyTransactions,
   changeYear,
-  yearlySummary
+  yearlySummary,
+  updateSelectedYear
 } = useYearlyTransactions();
 
 // 初始化載入資料
@@ -159,8 +160,16 @@ watch(() => props.accountId, (newAccountId) => {
 });
 
 const handleMonthChange = () => {
+  // 當日期選擇器變更時，重新載入資料
   loadYearlyTransactions(props.accountId, selectedYear.value);
 };
+
+// 新增監聽 selectedYear 的變化
+watch(selectedYear, (newYear) => {
+  if (newYear) {
+    loadYearlyTransactions(props.accountId, newYear);
+  }
+});
 
 const handlePrevMonth = () => {
   const newMonth = changeYear(-1);

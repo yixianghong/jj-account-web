@@ -116,7 +116,8 @@ const {
   loading,
   loadMonthlyTransactions,
   changeMonth,
-  monthlySummary
+  monthlySummary,
+  updateSelectedMonth
 } = monthlyTransactionsInstance || useMonthlyTransactions();
 
 // 初始化載入資料
@@ -132,8 +133,16 @@ watch(() => props.accountId, (newAccountId) => {
 });
 
 const handleMonthChange = () => {
+  // 當日期選擇器變更時，重新載入資料
   loadMonthlyTransactions(props.accountId, selectedMonth.value);
 };
+
+// 新增監聽 selectedMonth 的變化
+watch(selectedMonth, (newMonth) => {
+  if (newMonth) {
+    loadMonthlyTransactions(props.accountId, newMonth);
+  }
+});
 
 const handlePrevMonth = () => {
   const newMonth = changeMonth(-1);

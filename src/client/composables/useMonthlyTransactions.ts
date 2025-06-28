@@ -121,11 +121,14 @@ export const useMonthlyTransactions = () => {
 
   return {
     monthlyTransactions: readonly(monthlyTransactions),
-    selectedMonth: readonly(selectedMonth),
+    selectedMonth,
     loading: readonly(loading),
     loadMonthlyTransactions,
     changeMonth,
     monthlySummary,
     clearCache,
+    updateSelectedMonth: (month: string) => {
+      selectedMonth.value = month;
+    },
   };
 }; 
