@@ -32,11 +32,11 @@
   --color-neutral-950: #1c1c1e;
 
   /* 圓角 */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
-  --radius-2xl: 2rem;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 32px;
   --radius-full: 9999px;
 
   /* 陰影 */
@@ -208,7 +208,7 @@ h3 {
 .transaction-form {
   background-color: var(--bg-secondary);
   border-radius: var(--radius-xl);
-  padding: 2rem;
+  padding: 16px;
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -217,7 +217,7 @@ h3 {
 .transaction-list {
   background-color: var(--bg-secondary);
   border-radius: var(--radius-xl);
-  padding: 2rem;
+  padding: 16px;
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
@@ -226,7 +226,7 @@ h3 {
 .monthly-summary, .yearly-analysis {
   background-color: var(--bg-secondary);
   border-radius: var(--radius-xl);
-  padding: 2rem;
+  padding: 16px;
   box-shadow: var(--shadow-lg);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
