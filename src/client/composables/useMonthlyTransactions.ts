@@ -7,14 +7,14 @@ export const useMonthlyTransactions = () => {
   const monthlyTransactions = ref<Transaction[]>([]);
   const selectedMonth = ref(new Date().toISOString().slice(0, 7));
   const loading = ref(false);
-  const { set: setCache, get: getCache, has: hasCache, remove: removeCache } = useCache();
+  const { set: setCache, get: getCache, has: hasCache, remove: removeCache, removePattern } = useCache();
 
   // 載入指定月份的資料
   const loadMonthlyTransactions = async (accountId: string, month?: string) => {
     if (month) {
       selectedMonth.value = month;
     }
-    
+
     loading.value = true;
     try {
       // 檢查快取
@@ -43,7 +43,7 @@ export const useMonthlyTransactions = () => {
 
       const querySnapshot = await getDocs(q);
       const transactions: Transaction[] = [];
-      
+
       querySnapshot.forEach((doc) => {
         transactions.push({
           id: doc.id,
@@ -67,13 +67,11 @@ export const useMonthlyTransactions = () => {
   // 清除快取
   const clearCache = (accountId?: string) => {
     if (accountId) {
-      // 清除特定記帳本的快取
-      const cacheKey = `monthly_transactions_${accountId}_${selectedMonth.value}`;
-      removeCache(cacheKey);
+      // 清除特定記帳本的所有月度快取
+      removePattern(`monthly_transactions_${accountId}_*`);
     } else {
       // 清除所有月度快取
-      const cacheKey = `monthly_transactions_${accountId}_${selectedMonth.value}`;
-      removeCache(cacheKey);
+      removePattern(`monthly_transactions_*`);
     }
   };
 

@@ -8,7 +8,7 @@ interface CacheItem<T> {
 
 export const useCache = () => {
   const cache = ref<Map<string, CacheItem<any>>>(new Map())
-  
+
   // 預設快取時間：5分鐘
   const DEFAULT_TTL = 5 * 60 * 1000
 
@@ -54,6 +54,22 @@ export const useCache = () => {
     cache.value.delete(key)
   }
 
+  // 刪除符合模式的快取（支援萬用字元 *）
+  const removePattern = (pattern: string) => {
+    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+    let deletedCount = 0;
+
+    for (const key of cache.value.keys()) {
+      if (regex.test(key)) {
+        cache.value.delete(key);
+        deletedCount++;
+        console.log(`已刪除快取: ${key}`);
+      }
+    }
+
+    console.log(`removePattern("${pattern}") 共刪除了 ${deletedCount} 個快取項目`);
+  }
+
   // 清除所有快取
   const clear = () => {
     cache.value.clear()
@@ -79,6 +95,7 @@ export const useCache = () => {
     get,
     has,
     remove,
+    removePattern,
     clear,
     cleanup
   }

@@ -7,8 +7,8 @@ export const useTransactions = (bookId: string) => {
     const { $firebase } = useNuxtApp();
     const { user, loading: authLoading } = useAuth();
     const { handleError } = useErrorHandler();
-    const { set: setCache, get: getCache, has: hasCache, remove: removeCache } = useCache();
-    
+    const { set: setCache, get: getCache, has: hasCache, remove: removeCache, removePattern } = useCache();
+
     const transactions = ref<Transaction[]>([]);
     const loading = ref(false);
     let unsubscribe: (() => void) | null = null;
@@ -55,7 +55,7 @@ export const useTransactions = (bookId: string) => {
             const bookData = bookDoc.data();
             // 檢查使用者是否為記帳本擁有者或共享使用者
             const hasPermission = bookData.userId === user.value.uid || bookData.sharedUsers?.includes(user.value.email);
-            
+
             setCache(permissionKey, hasPermission, 10 * 60 * 1000); // 10分鐘快取
             return hasPermission;
         } catch (error) {
@@ -86,7 +86,7 @@ export const useTransactions = (bookId: string) => {
                 transactions.value = realtimeTransactions;
 
                 // 清除相關快取
-                removeCache(`transactions_${bookId}_*`);
+                removePattern(`transactions_${bookId}_*`);
             }, (error) => {
                 handleError(error, '監聽交易記錄失敗');
             });
@@ -110,9 +110,9 @@ export const useTransactions = (bookId: string) => {
 
             const transactionsRef = collection($firebase.db, 'accountBooks', bookId, 'transactions');
             await addDoc(transactionsRef, newTransaction);
-            
+
             // 清除快取
-            removeCache(`transactions_${bookId}_*`);
+            removePattern(`transactions_${bookId}_*`);
         } catch (error) {
             handleError(error, '新增交易記錄失敗');
             throw error;
@@ -130,9 +130,9 @@ export const useTransactions = (bookId: string) => {
                 ...updates,
                 updatedAt: new Date().toISOString(),
             });
-            
+
             // 清除快取
-            removeCache(`transactions_${bookId}_*`);
+            removePattern(`transactions_${bookId}_*`);
         } catch (error) {
             handleError(error, '更新交易記錄失敗');
             throw error;
@@ -147,9 +147,9 @@ export const useTransactions = (bookId: string) => {
 
             const transactionRef = doc($firebase.db, 'accountBooks', bookId, 'transactions', transactionId);
             await deleteDoc(transactionRef);
-            
+
             // 清除快取
-            removeCache(`transactions_${bookId}_*`);
+            removePattern(`transactions_${bookId}_*`);
         } catch (error) {
             handleError(error, '刪除交易記錄失敗');
             throw error;
@@ -182,9 +182,9 @@ export const useTransactions = (bookId: string) => {
             });
 
             await batch.commit();
-            
+
             // 清除快取
-            removeCache(`transactions_${bookId}_*`);
+            removePattern(`transactions_${bookId}_*`);
         } catch (error) {
             handleError(error, '更新交易記錄請款狀態失敗');
             throw error;

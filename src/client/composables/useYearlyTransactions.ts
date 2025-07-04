@@ -7,14 +7,14 @@ export const useYearlyTransactions = () => {
   const yearlyTransactions = ref<Transaction[]>([]);
   const selectedYear = ref(new Date().toISOString().slice(0, 7)); // 改為月份格式
   const loading = ref(false);
-  const { set: setCache, get: getCache, has: hasCache, remove: removeCache } = useCache();
+  const { set: setCache, get: getCache, has: hasCache, remove: removeCache, removePattern } = useCache();
 
   // 計算滾動年度的開始和結束日期
   const getRollingYearRange = (endMonth: string) => {
     const [endYear, endMonthNum] = endMonth.split('-').map(Number);
     const startDate = new Date(endYear, endMonthNum - 1 - 11, 1); // 往前推11個月
     const endDate = new Date(endYear, endMonthNum, 0); // 當月最後一天
-    
+
     return {
       startDate: `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-01`,
       endDate: `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}-${String(endDate.getDate()).padStart(2, '0')}`,
@@ -28,7 +28,7 @@ export const useYearlyTransactions = () => {
     if (endMonth) {
       selectedYear.value = endMonth;
     }
-    
+
     loading.value = true;
     try {
       // 檢查快取
@@ -55,7 +55,7 @@ export const useYearlyTransactions = () => {
 
       const querySnapshot = await getDocs(q);
       const transactions: Transaction[] = [];
-      
+
       querySnapshot.forEach((doc) => {
         transactions.push({
           id: doc.id,
@@ -79,13 +79,11 @@ export const useYearlyTransactions = () => {
   // 清除快取
   const clearCache = (accountId?: string) => {
     if (accountId) {
-      // 清除特定記帳本的快取
-      const cacheKey = `yearly_transactions_${accountId}_${selectedYear.value}`;
-      removeCache(cacheKey);
+      // 清除特定記帳本的所有年度快取
+      removePattern(`yearly_transactions_${accountId}_*`);
     } else {
       // 清除所有年度快取
-      const cacheKey = `yearly_transactions_${accountId}_${selectedYear.value}`;
-      removeCache(cacheKey);
+      removePattern(`yearly_transactions_*`);
     }
   };
 
@@ -138,16 +136,16 @@ export const useYearlyTransactions = () => {
     for (let i = 0; i < 12; i++) {
       const currentDate = new Date(startYear, startMonthNum - 1 + i, 1);
       const monthStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-      
-      const monthTransactions = yearlyTransactions.value.filter(t => 
+
+      const monthTransactions = yearlyTransactions.value.filter(t =>
         t.date.startsWith(monthStr)
       );
-      
+
       // 排除「上期結餘」的月度收入
       const monthIncome = monthTransactions
         .filter(t => t.type === 'income' && t.category !== '上期結餘')
         .reduce((sum, t) => sum + t.amount, 0);
-      
+
       const monthExpense = monthTransactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
