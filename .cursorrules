@@ -1,0 +1,70 @@
+# Nuxt UI 3.0.2 專案開發規則
+
+## 組件使用原則
+- 優先使用 `@nuxt/ui` 提供的組件，避免自定義基礎 UI 組件
+- 使用 Nuxt UI 的組件時，遵循官方文檔的 API 設計
+- 對於複雜的自定義組件，可以基於 Nuxt UI 組件進行擴展
+
+## 程式碼風格
+- 使用 TypeScript 進行開發
+- 遵循 Vue 3 Composition API 的寫法
+- 使用 `<script setup>` 語法
+- 組件命名使用 PascalCase
+- 檔案命名使用 kebab-case
+
+## Nuxt UI 組件優先級
+1. 優先使用 Nuxt UI 的基礎組件：
+   - UButton, UInput, UCard, UModal, UDropdown
+   - UTable, UForm, UBadge, UIcon
+   - UAvatar, UProgress, UAlert, UNotification
+
+2. 自定義組件時：
+   - 繼承 Nuxt UI 組件的 props 和 events
+   - 保持一致的設計語言
+   - 使用 Nuxt UI 的顏色系統和間距規範
+
+## 樣式規範
+- 使用 Nuxt UI 的設計系統顏色
+- 遵循 Nuxt UI 的間距和尺寸規範
+- 避免自定義 CSS，優先使用 Nuxt UI 的 utility classes
+- 響應式設計使用 Nuxt UI 的 breakpoint 系統
+
+## 狀態管理
+- 使用 Nuxt 的 composables 進行狀態管理
+- 保持組件的單一職責原則
+- 使用 `useState` 和 `useCookie` 進行客戶端狀態管理
+
+## 性能優化
+- 使用 Nuxt UI 組件的 lazy loading 功能
+- 合理使用 `v-if` 和 `v-show`
+- 避免不必要的組件重新渲染
+
+## 無障礙性
+- 確保所有 Nuxt UI 組件都有適當的 ARIA 標籤
+- 支援鍵盤導航
+- 保持足夠的顏色對比度
+
+## 測試原則
+- 為自定義組件編寫單元測試
+- 測試 Nuxt UI 組件的整合
+- 確保組件在不同螢幕尺寸下的表現
+
+## 文檔和註釋
+- 為自定義組件添加 JSDoc 註釋
+- 說明組件的 props、events 和 slots
+- 提供使用範例
+
+## 錯誤處理
+- 使用 Nuxt UI 的 UAlert 組件顯示錯誤訊息
+- 實現適當的錯誤邊界
+- 提供用戶友好的錯誤提示
+
+## 國際化
+- 使用 Nuxt 的 i18n 模組
+- 確保所有文字都可以被翻譯
+- 支援 RTL 語言
+
+## 部署和建置
+- 確保 Nuxt UI 組件在 SSR 和 CSR 模式下都能正常工作
+- 優化 bundle 大小
+- 使用 Nuxt 的 auto-import 功能
