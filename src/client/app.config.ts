@@ -1,6 +1,12 @@
 // app.config.ts
 export default defineAppConfig({
   ui: {
+    colors: {
+      primary: 'emerald',
+      success: 'emerald',
+      warning: 'amber',
+      error: 'red'
+    },
     button: {
       slots: {
         base: 'font-bold'

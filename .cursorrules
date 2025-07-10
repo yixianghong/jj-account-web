@@ -29,6 +29,18 @@
 - 避免自定義 CSS，優先使用 Nuxt UI 的 utility classes
 - 響應式設計使用 Nuxt UI 的 breakpoint 系統
 
+## Nuxt UI 顏色系統規範
+- 使用 Nuxt UI 標準顏色值：
+  - `primary` - 主要顏色（藍色系）
+  - `secondary` - 次要顏色
+  - `success` - 成功狀態（綠色系）
+  - `error` - 錯誤狀態（紅色系）
+  - `warning` - 警告狀態（黃色系）
+  - `info` - 資訊狀態（藍色系）
+  - `neutral` - 中性顏色（灰色系）
+- 避免使用自定義顏色名稱如 'red', 'green', 'blue', 'gray'
+- 組件顏色屬性必須使用上述標準值
+
 ## 狀態管理
 - 使用 Nuxt 的 composables 進行狀態管理
 - 保持組件的單一職責原則
