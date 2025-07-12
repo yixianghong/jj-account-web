@@ -45,30 +45,6 @@
         </UFormField>
       </div>
 
-      <!-- 付款人選擇 -->
-      <div class="recorder-selector">
-        <UFormField label="付款人" class="mb-3">
-          <div class="flex gap-3">
-            <button
-              v-for="option in recorderOptions"
-              :key="option.value"
-              type="button"
-              class="recorder-avatar"
-              :class="{
-                'recorder-avatar--selected': form.recorder === option.value,
-                'recorder-avatar--unselected': form.recorder !== option.value
-              }"
-              @click="form.recorder = option.value"
-              :title="option.label"
-            >
-              <span class="recorder-avatar__text">
-                {{ option.label.charAt(0) }}
-              </span>
-            </button>
-          </div>
-        </UFormField>
-      </div>
-
       <!-- 金額和描述輸入 - 同一行 -->
       <div class="grid grid-cols-2 gap-4">
         <div class="amount-input">
@@ -76,7 +52,7 @@
             <div class="relative">
               <UInput
                 v-model.number="form.amount"
-                class="w-full text-3xl font-bold text-center pr-4"
+                class="w-full text-3xl font-bold text-center"
                 type="number"
                 inputmode="decimal"
                 step="1"
@@ -136,6 +112,30 @@
             </div>
           </UFormField>
         </div>
+      </div>
+
+      <!-- 付款人選擇 -->
+      <div class="recorder-selector">
+        <UFormField label="付款人" class="mb-3">
+          <div class="flex gap-3">
+            <button
+              v-for="option in recorderOptions"
+              :key="option.value"
+              type="button"
+              class="recorder-avatar"
+              :class="{
+                'recorder-avatar--selected': form.recorder === option.value,
+                'recorder-avatar--unselected': form.recorder !== option.value
+              }"
+              @click="form.recorder = option.value"
+              :title="option.label"
+            >
+              <span class="recorder-avatar__text">
+                {{ option.label.charAt(0) }}
+              </span>
+            </button>
+          </div>
+        </UFormField>
       </div>
 
       <!-- 提交按鈕 - 固定在底部 -->
@@ -357,8 +357,8 @@ const handleSubmit = async () => {
 
 /* 付款人頭貼樣式 */
 .recorder-avatar {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   border: 3px solid transparent;
   display: flex;
@@ -441,8 +441,8 @@ const handleSubmit = async () => {
   }
   
   .recorder-avatar {
-    min-width: 30px;
-    min-height: 30px;
+    min-width: 40px;
+    min-height: 40px;
   }
 }
 </style>

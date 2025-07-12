@@ -1,8 +1,5 @@
 <template>
-  <UModal v-model:open="isOpen">
-    <template #header>
-      <h3 class="text-xl font-semibold">{{ mode === 'add' ? '新增記帳' : '編輯記帳' }}</h3>
-    </template>
+  <UModal v-model:open="isOpen" :title="mode === 'add' ? '新增記帳' : '編輯記帳'">
     <template #body>
       <TransactionForm
         v-if="book"
