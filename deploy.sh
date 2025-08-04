@@ -4,4 +4,4 @@
 npm run generate
 
 # 部署到 Firebase
-firebase deploy --only hosting --force
+firebase deploy --only hosting --force --project jj-account
