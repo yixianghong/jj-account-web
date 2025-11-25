@@ -157,7 +157,7 @@ export const useTransactions = (bookId: string) => {
     };
 
     // 更新多筆交易記錄的請款狀態
-    const updateTransactionsPaymentStatus = async (recorder: Recorder, status: 'paid' | 'pending') => {
+    const updateTransactionsPaymentStatus = async (recorder: Recorder, status: 'paid' | 'pending', month?: string) => {
         try {
             const hasPermission = await checkBookPermission();
             if (!hasPermission) return;
@@ -173,7 +173,16 @@ export const useTransactions = (bookId: string) => {
             const querySnapshot = await getDocs(q);
             const batch = writeBatch($firebase.db);
 
-            querySnapshot.docs.forEach((doc) => {
+            // 如果有指定月份，則只更新該月份的交易記錄
+            const docsToUpdate = month
+                ? querySnapshot.docs.filter(doc => {
+                    const date = doc.data().date as string;
+                    // 日期格式為 'YYYY-MM-DD'，月份格式為 'YYYY-MM'
+                    return date.startsWith(month);
+                })
+                : querySnapshot.docs;
+
+            docsToUpdate.forEach((doc) => {
                 const transactionRef = doc.ref;
                 batch.update(transactionRef, {
                     paymentStatus: status,

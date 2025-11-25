@@ -187,7 +187,8 @@ const handleClaimAll = async (recorder: Recorder) => {
   if (!transactionsInstance.value) return;
   
   try {
-    await transactionsInstance.value.updateTransactionsPaymentStatus(recorder, 'paid');
+    // 傳入當前選中的月份，只更新該月份的交易記錄
+    await transactionsInstance.value.updateTransactionsPaymentStatus(recorder, 'paid', selectedMonth.value);
     
     // 清除相關分析快取
     const { clearAccountAnalysisCache } = useAnalysisCache();
@@ -199,7 +200,7 @@ const handleClaimAll = async (recorder: Recorder) => {
     
     useToast().add({
       title: '更新成功',
-      description: '已更新所有交易記錄的請款狀態',
+      description: `已更新 ${selectedMonth.value} 的所有交易記錄請款狀態`,
       color: 'success'
     });
   } catch (error) {
