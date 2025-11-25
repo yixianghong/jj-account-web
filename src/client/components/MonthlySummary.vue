@@ -32,6 +32,56 @@
 
     <!-- 月度統計內容 -->
     <div v-else>
+      <!-- 上期結餘檢查區塊 -->
+      <UCard class="bg-white rounded-lg shadow p-4 mb-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-semibold mb-1">上期結餘檢查</h3>
+            <p class="text-sm text-neutral-500">檢查並自動產生上期結餘</p>
+          </div>
+          <UButton
+            color="primary"
+            :loading="isCheckingBalance"
+            @click="handleCheckBalance"
+          >
+            檢查上期結餘
+          </UButton>
+        </div>
+
+        <!-- 檢查結果顯示 -->
+        <div v-if="balanceCheckResult" class="mt-4">
+          <!-- 可以產生 -->
+          <div v-if="balanceCheckResult.status === 'can_create'" class="bg-primary-50 border border-primary-200 rounded-lg p-3">
+            <div class="flex items-start justify-between">
+              <div>
+                <p class="font-semibold text-primary-900">💡 可以產生上期結餘</p>
+                <p class="text-sm text-primary-700 mt-1">
+                  來自 {{ balanceCheckResult.previousMonth }} 的結餘：
+                  <span class="font-bold">${{ balanceCheckResult.amount?.toLocaleString() }}</span>
+                </p>
+              </div>
+              <UButton
+                color="primary"
+                size="sm"
+                @click="handleGenerateBalance"
+              >
+                產生
+              </UButton>
+            </div>
+          </div>
+
+          <!-- 金額不符 -->
+          <div v-else-if="balanceCheckResult.status === 'mismatch'" class="bg-warning-50 border border-warning-200 rounded-lg p-3">
+            <p class="font-semibold text-warning-900">⚠️ 上期結餘金額不符</p>
+            <div class="text-sm text-warning-700 mt-2 space-y-1">
+              <p>預期金額（{{ balanceCheckResult.previousMonth }} 結餘）：<span class="font-bold">${{ balanceCheckResult.expected?.toLocaleString() }}</span></p>
+              <p>實際記錄：<span class="font-bold">${{ balanceCheckResult.actual?.toLocaleString() }}</span></p>
+              <p class="text-error-600">差異：<span class="font-bold">${{ balanceCheckResult.difference?.toLocaleString() }}</span></p>
+            </div>
+          </div>
+        </div>
+      </UCard>
+
       <div class="grid grid-cols-3 gap-4 mb-6">
         <UCard class="bg-success-50 rounded-lg shadow-md flex flex-col items-center py-2">
           <div class="text-sm text-success-700">總收入</div>
@@ -113,6 +163,8 @@ const emit = defineEmits<{
 // 使用注入的共享月度交易 composable
 const monthlyTransactionsInstance = inject('monthlyTransactions') as ReturnType<typeof useMonthlyTransactions> | undefined;
 
+const instance = monthlyTransactionsInstance || useMonthlyTransactions();
+
 const {
   monthlyTransactions,
   selectedMonth,
@@ -121,7 +173,11 @@ const {
   changeMonth,
   monthlySummary,
   updateSelectedMonth
-} = monthlyTransactionsInstance || useMonthlyTransactions();
+} = instance;
+
+// 上期結餘檢查狀態
+const balanceCheckResult = ref<any>(null);
+const isCheckingBalance = ref(false);
 
 // 初始化載入資料
 onMounted(() => {
@@ -160,6 +216,77 @@ const handleNextMonth = () => {
 const handleClaimAll = (recorder: Recorder) => {
   if (confirm(`確定要請款 ${recorder} 的所有未請款項目嗎？`)) {
     emit("claimAll", recorder);
+  }
+};
+
+// 檢查並產生上期結餘
+const handleCheckBalance = async () => {
+  isCheckingBalance.value = true;
+  try {
+    const result = await (instance as any).autoGeneratePreviousBalance?.(props.accountId);
+    balanceCheckResult.value = result;
+    
+    // 根據結果顯示訊息
+    if (result?.status === 'ok') {
+      useToast().add({
+        title: '✓ 上期結餘正確',
+        description: `金額：$${result.amount?.toLocaleString()}`,
+        color: 'success'
+      });
+    } else if (result?.status === 'first_month') {
+      useToast().add({
+        title: '提示',
+        description: result.message,
+        color: 'primary'
+      });
+    } else if (result?.status === 'warning') {
+      useToast().add({
+        title: '⚠️ 警告',
+        description: result.message,
+        color: 'warning'
+      });
+    }
+  } catch (error) {
+    console.error('檢查上期結餘失敗:', error);
+    useToast().add({
+      title: '錯誤',
+      description: '檢查上期結餘時發生錯誤',
+      color: 'error'
+    });
+  } finally {
+    isCheckingBalance.value = false;
+  }
+};
+
+// 產生上期結餘
+const handleGenerateBalance = async () => {
+  if (!balanceCheckResult.value || balanceCheckResult.value.status !== 'can_create') {
+    return;
+  }
+  
+  try {
+    const amount = balanceCheckResult.value.amount;
+    const previousMonth = balanceCheckResult.value.previousMonth;
+    
+    if (confirm(`確定要產生上期結餘嗎？\n金額：$${amount.toLocaleString()}\n來源：${previousMonth} 結餘`)) {
+      await (instance as any).createPreviousBalanceTransaction?.(props.accountId, amount);
+      
+      useToast().add({
+        title: '✓ 已產生上期結餘',
+        description: `金額：$${amount.toLocaleString()}（來自 ${previousMonth}）`,
+        color: 'success'
+      });
+      
+      // 清除檢查結果
+      balanceCheckResult.value = null;
+    }
+  } catch (error) {
+    console.error('產生上期結餘失敗:', error);
+    useToast().add({
+      title: '錯誤',
+      description: '產生上期結餘時發生錯誤',
+      color: 'error'
+    });
   }
 };
 </script>

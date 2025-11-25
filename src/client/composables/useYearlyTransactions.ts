@@ -98,6 +98,11 @@ export const useYearlyTransactions = () => {
 
   // 計算年度統計
   const yearlySummary = computed(() => {
+    // 找出第一個月的上期結餘（期初餘額）
+    const firstMonthBalance = yearlyTransactions.value
+      .filter((t) => t.type === "income" && t.category === "上期結餘")
+      .sort((a, b) => a.date.localeCompare(b.date))[0]?.amount || 0;
+
     // 排除「上期結餘」的收入項目
     const totalIncome = yearlyTransactions.value
       .filter((t) => t.type === "income" && t.category !== "上期結餘")
@@ -160,7 +165,7 @@ export const useYearlyTransactions = () => {
     return {
       totalIncome,
       totalExpense,
-      balance: totalIncome - totalExpense,
+      balance: firstMonthBalance + totalIncome - totalExpense, // 年度結餘 = 期初餘額 + 收入 - 支出
       categorySummary,
       recorderSummary,
       monthlyData,
