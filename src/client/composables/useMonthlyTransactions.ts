@@ -52,17 +52,17 @@ export const useMonthlyTransactions = () => {
   // 輔助函數：計算指定月份的結餘
   const calculateMonthBalance = async (accountId: string, month: string): Promise<number> => {
     const transactions = await loadMonthTransactionsWithoutCache(accountId, month);
-    
+
     // 計算該月收入（包含上期結餘）
     const totalIncomeIncludingBalance = transactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     // 計算該月支出
     const totalExpense = transactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     // 結餘 = 收入（含上期結餘）- 支出
     return totalIncomeIncludingBalance - totalExpense;
   };
@@ -146,35 +146,35 @@ export const useMonthlyTransactions = () => {
   const autoGeneratePreviousBalance = async (accountId: string) => {
     try {
       const currentMonth = selectedMonth.value;
-      
+
       // 1. 檢查當月是否已有上期結餘
       const existingBalances = monthlyTransactions.value.filter(
         t => t.type === 'income' && t.category === '上期結餘'
       );
-      
+
       // 2. 如果有多筆上期結餘，發出警告
       if (existingBalances.length > 1) {
-        return { 
-          status: 'warning', 
-          message: `發現 ${existingBalances.length} 筆上期結餘記錄，建議只保留一筆` 
+        return {
+          status: 'warning',
+          message: `發現 ${existingBalances.length} 筆上期結餘記錄，建議只保留一筆`
         };
       }
-      
+
       // 3. 計算上個月的結餘
       const previousMonth = getPreviousMonth(currentMonth);
-      
+
       // 檢查上個月是否有交易記錄（判斷是否為第一個月）
       const previousTransactions = await loadMonthTransactionsWithoutCache(accountId, previousMonth);
       if (previousTransactions.length === 0) {
-        return { 
-          status: 'first_month', 
-          message: '這是第一個月，無需產生上期結餘' 
+        return {
+          status: 'first_month',
+          message: '這是第一個月，無需產生上期結餘'
         };
       }
-      
+
       // 計算上個月結餘
       const previousMonthBalance = await calculateMonthBalance(accountId, previousMonth);
-      
+
       // 4. 如果沒有上期結餘，可以產生
       if (existingBalances.length === 0) {
         return {
@@ -183,28 +183,28 @@ export const useMonthlyTransactions = () => {
           previousMonth
         };
       }
-      
+
       // 5. 如果有上期結餘，檢查金額是否正確
       const existingBalance = existingBalances[0];
       if (existingBalance.amount !== previousMonthBalance) {
-        return { 
-          status: 'mismatch', 
-          expected: previousMonthBalance, 
+        return {
+          status: 'mismatch',
+          expected: previousMonthBalance,
           actual: existingBalance.amount,
           difference: previousMonthBalance - existingBalance.amount,
           previousMonth
         };
       }
-      
-      return { 
+
+      return {
         status: 'ok',
-        amount: previousMonthBalance 
+        amount: previousMonthBalance
       };
     } catch (error) {
       console.error('檢查上期結餘失敗:', error);
-      return { 
-        status: 'error', 
-        message: '檢查上期結餘時發生錯誤' 
+      return {
+        status: 'error',
+        message: '檢查上期結餘時發生錯誤'
       };
     }
   };
@@ -215,7 +215,7 @@ export const useMonthlyTransactions = () => {
       const { $firebase } = useNuxtApp();
       const currentMonth = selectedMonth.value;
       const previousMonth = getPreviousMonth(currentMonth);
-      
+
       const transaction: Omit<Transaction, 'id'> = {
         type: 'income',
         amount: amount,
@@ -227,18 +227,18 @@ export const useMonthlyTransactions = () => {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      
+
       const transactionsRef = collection($firebase.db, 'accountBooks', accountId, 'transactions');
       await addDoc(transactionsRef, transaction);
-      
+
       // 清除快取並重新載入
       removePattern(`monthly_transactions_${accountId}_*`);
       await loadMonthlyTransactions(accountId, currentMonth);
-      
-      return { 
-        status: 'success', 
+
+      return {
+        status: 'success',
         amount,
-        previousMonth 
+        previousMonth
       };
     } catch (error) {
       console.error('產生上期結餘失敗:', error);
@@ -276,13 +276,23 @@ export const useMonthlyTransactions = () => {
         return acc;
       }, {} as Record<string, number>);
 
+    // 計算總未請款金額
+    const totalPendingAmount = Object.values(pendingAmountByRecorder)
+      .reduce((sum, amount) => sum + amount, 0);
+
+    // 計算實際應有金額（含未請款）= 結餘 + 未請款金額
+    const balance = totalIncomeIncludingBalance - totalExpense;
+    const expectedBalance = balance + totalPendingAmount;
+
     return {
       totalIncome,
       totalIncomeIncludingBalance, // 包含上期結餘的總收入
       totalExpense,
-      balance: totalIncomeIncludingBalance - totalExpense, // 結餘包含上期結餘
+      balance, // 結餘包含上期結餘
       categorySummary,
       pendingAmountByRecorder,
+      totalPendingAmount, // 總未請款金額
+      expectedBalance, // 實際應有金額（含未請款）
     };
   });
 

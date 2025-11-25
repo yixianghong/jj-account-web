@@ -106,6 +106,45 @@
         </UCard>
       </div>
 
+      <!-- 財務核對卡片 -->
+      <UCard v-if="monthlySummary.totalPendingAmount > 0" class="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg shadow-md p-4 mb-6">
+        <h3 class="text-lg font-semibold mb-3 flex items-center">
+          💵 財務核對
+          <UBadge class="ml-2" color="primary" size="xs">含未請款</UBadge>
+        </h3>
+        
+        <div class="space-y-3">
+          <!-- 當前結餘 -->
+          <div class="flex justify-between items-center">
+            <span class="text-neutral-600">當前結餘（帳面）</span>
+            <span class="text-xl font-bold text-primary-600">
+              ${{ monthlySummary.balance.toLocaleString() }}
+            </span>
+          </div>
+          
+          <!-- 未請款金額 -->
+          <div class="flex justify-between items-center border-t pt-2">
+            <span class="text-neutral-600">未請款金額</span>
+            <span class="text-lg font-semibold text-warning-600">
+              +${{ monthlySummary.totalPendingAmount.toLocaleString() }}
+            </span>
+          </div>
+          
+          <!-- 應有金額 -->
+          <div class="flex justify-between items-center border-t-2 border-primary-200 pt-3">
+            <span class="font-semibold text-neutral-800">實際應有金額</span>
+            <span class="text-2xl font-extrabold text-success-600">
+              ${{ monthlySummary.expectedBalance.toLocaleString() }}
+            </span>
+          </div>
+          
+          <!-- 說明 -->
+          <div class="text-xs text-neutral-500 bg-white/50 rounded p-2 mt-2">
+            💡 此金額為請款後應有的總額，可用於對帳
+          </div>
+        </div>
+      </UCard>
+
       <UCard class="bg-white rounded-lg shadow p-2 mb-6">
         <h3 class="text-lg font-semibold mb-3">分類支出</h3>
         <div class="space-y-2">
