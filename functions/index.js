@@ -1,16 +1,15 @@
-const { onDocumentCreated } = require('firebase-functions/v2/firestore');
+const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-exports.notifyOnNewTransaction = onDocumentCreated(
-    {
-        document: 'accountBooks/{bookId}/transactions/{transactionId}',
-        region: 'asia-east1',
-    },
-    async (event) => {
-        const { bookId } = event.params;
-        const transaction = event.data?.data();
+exports.notifyOnNewTransaction = functions
+    .region('asia-east1')
+    .firestore
+    .document('accountBooks/{bookId}/transactions/{transactionId}')
+    .onCreate(async (snap, context) => {
+        const { bookId } = context.params;
+        const transaction = snap.data();
         if (!transaction) return;
 
         const db = admin.firestore();
