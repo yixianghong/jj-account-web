@@ -1,6 +1,8 @@
 import tailwindcss from "@tailwindcss/vite";
 // https://nuxt.com/docs/api/configuration/nuxt-config
 import { fileURLToPath } from "node:url";
+import fs from "node:fs";
+import path from "node:path";
 export default defineNuxtConfig({
   compatibilityDate: "2024-12-25",
   devtools: { enabled: true },
@@ -38,7 +40,38 @@ export default defineNuxtConfig({
       firebaseProjectId: process.env.FIREBASE_PROJECT_ID,
       firebaseStorageBucket: process.env.FIREBASE_STORAGE_BUCKET,
       firebaseMessagingSenderId: process.env.FIREBASE_MESSAGING_SENDER_ID,
-      firebaseAppId: process.env.FIREBASE_APP_ID
+      firebaseAppId: process.env.FIREBASE_APP_ID,
+      firebaseVapidKey: process.env.FIREBASE_VAPID_KEY,
+    }
+  },
+  hooks: {
+    'build:before'() {
+      const swContent = `importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/10.7.0/firebase-messaging-compat.js');
+
+firebase.initializeApp({
+  apiKey: "${process.env.FIREBASE_API_KEY}",
+  authDomain: "${process.env.FIREBASE_AUTH_DOMAIN}",
+  projectId: "${process.env.FIREBASE_PROJECT_ID}",
+  storageBucket: "${process.env.FIREBASE_STORAGE_BUCKET}",
+  messagingSenderId: "${process.env.FIREBASE_MESSAGING_SENDER_ID}",
+  appId: "${process.env.FIREBASE_APP_ID}"
+});
+
+const messaging = firebase.messaging();
+
+messaging.onBackgroundMessage((payload) => {
+  const { title, body } = payload.notification;
+  self.registration.showNotification(title, {
+    body,
+    icon: '/icons/icon-192x192.png',
+  });
+});
+`;
+      fs.writeFileSync(
+        path.resolve('./src/client/public/firebase-messaging-sw.js'),
+        swContent
+      );
     }
   },
   nitro: {

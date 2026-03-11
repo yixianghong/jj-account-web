@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getMessaging } from 'firebase/messaging';
 
 export default defineNuxtPlugin(() => {
     // 確保只在客戶端執行
@@ -21,6 +22,7 @@ export default defineNuxtPlugin(() => {
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    const messaging = getMessaging(app);
     const googleProvider = new GoogleAuthProvider();
 
     // 只提供一次 Firebase 實例
@@ -30,6 +32,7 @@ export default defineNuxtPlugin(() => {
                 app,
                 auth,
                 db,
+                messaging,
                 googleProvider
             }
         }

@@ -54,6 +54,8 @@ export const useAuth = () => {
                 user.value = newUser
                 if (newUser) {
                     await ensureUserData(newUser)
+                    const { initFcm } = useFcm()
+                    initFcm(newUser.uid)
                 }
                 loading.value = false
             }, (error) => {
