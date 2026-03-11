@@ -4,7 +4,10 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 exports.notifyOnNewTransaction = onDocumentCreated(
-    'accountBooks/{bookId}/transactions/{transactionId}',
+    {
+        document: 'accountBooks/{bookId}/transactions/{transactionId}',
+        region: 'asia-east1',
+    },
     async (event) => {
         const { bookId } = event.params;
         const transaction = event.data?.data();
