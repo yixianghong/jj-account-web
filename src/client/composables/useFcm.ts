@@ -1,5 +1,5 @@
 import { getToken, onMessage } from 'firebase/messaging';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, arrayUnion } from 'firebase/firestore';
 
 export const useFcm = () => {
     const { $firebase } = useNuxtApp();
@@ -22,9 +22,9 @@ export const useFcm = () => {
 
             if (!token) return;
 
-            // 將 token 存到 Firestore users/{uid}
+            // 將 token 加入 Firestore users/{uid}.fcmTokens（陣列，保留所有裝置）
             await setDoc(doc($firebase.db, 'users', uid), {
-                fcmToken: token,
+                fcmTokens: arrayUnion(token),
                 updatedAt: new Date().toISOString(),
             }, { merge: true });
 

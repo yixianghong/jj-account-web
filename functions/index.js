@@ -25,21 +25,22 @@ exports.notifyOnNewTransaction = onDocumentCreated(
 
         const tokens = [];
 
-        // 取得擁有者的 FCM token
+        // 取得擁有者的 FCM tokens
         const ownerSnap = await db.doc(`users/${ownerUid}`).get();
-        if (ownerSnap.exists && ownerSnap.data().fcmToken) {
-            tokens.push(ownerSnap.data().fcmToken);
+        if (ownerSnap.exists) {
+            const ownerTokens = ownerSnap.data().fcmTokens || [];
+            tokens.push(...ownerTokens);
         }
 
-        // 取得共享使用者的 FCM token（用 email 查詢）
+        // 取得共享使用者的 FCM tokens（用 email 查詢）
         if (sharedEmails.length > 0) {
             const usersSnap = await db.collection('users')
                 .where('email', 'in', sharedEmails)
                 .get();
 
             usersSnap.docs.forEach(doc => {
-                const token = doc.data().fcmToken;
-                if (token) tokens.push(token);
+                const userTokens = doc.data().fcmTokens || [];
+                tokens.push(...userTokens);
             });
         }
 
