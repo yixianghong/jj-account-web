@@ -22,11 +22,16 @@ export const useFcm = () => {
 
             if (!token) return;
 
-            // 將 token 加入 Firestore users/{uid}.fcmTokens（陣列，保留所有裝置）
-            await setDoc(doc($firebase.db, 'users', uid), {
-                fcmTokens: arrayUnion(token),
-                updatedAt: new Date().toISOString(),
-            }, { merge: true });
+            // token 沒變就不寫 Firestore
+            const storageKey = `fcmToken_${uid}`;
+            const savedToken = localStorage.getItem(storageKey);
+            if (savedToken !== token) {
+                await setDoc(doc($firebase.db, 'users', uid), {
+                    fcmTokens: arrayUnion(token),
+                    updatedAt: new Date().toISOString(),
+                }, { merge: true });
+                localStorage.setItem(storageKey, token);
+            }
 
             // 處理 App 在前景時收到的推播（顯示 toast）
             onMessage($firebase.messaging, (payload) => {

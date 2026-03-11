@@ -49,7 +49,7 @@ exports.notifyOnNewTransaction = onDocumentCreated(
             });
         }
 
-        console.log('收集到的 tokens 數量:', tokens.length);
+        console.log('收集到的 tokens 數量:', tokens);
         if (tokens.length === 0) {
             console.log('沒有 FCM token，結束');
             return;
