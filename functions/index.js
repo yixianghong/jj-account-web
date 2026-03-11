@@ -1,16 +1,22 @@
-const functions = require('firebase-functions');
+const { onDocumentCreated } = require('firebase-functions/v2/firestore');
 const admin = require('firebase-admin');
 
 admin.initializeApp();
 
-exports.notifyOnNewTransaction = functions
-    .region('asia-east1')
-    .firestore
-    .document('accountBooks/{bookId}/transactions/{transactionId}')
-    .onCreate(async (snap, context) => {
-        const { bookId } = context.params;
-        const transaction = snap.data();
-        if (!transaction) return;
+exports.notifyOnNewTransaction = onDocumentCreated(
+    {
+        document: 'accountBooks/{bookId}/transactions/{transactionId}',
+        region: 'asia-east1',
+        database: '(default)',
+    },
+    async (event) => {
+        const { bookId } = event.params;
+        console.log('Function 觸發，bookId:', bookId);
+        const transaction = event.data?.data();
+        if (!transaction) {
+            console.log('transaction 資料為空，結束');
+            return;
+        }
 
         const db = admin.firestore();
 
@@ -43,7 +49,11 @@ exports.notifyOnNewTransaction = functions
             });
         }
 
-        if (tokens.length === 0) return;
+        console.log('收集到的 tokens 數量:', tokens.length);
+        if (tokens.length === 0) {
+            console.log('沒有 FCM token，結束');
+            return;
+        }
 
         // 組裝通知內容
         const typeText = transaction.type === 'income' ? '收入' : '支出';
