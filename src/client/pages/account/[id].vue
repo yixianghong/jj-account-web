@@ -11,7 +11,6 @@
         />
       <h1 class="text-3xl font-extrabold text-center tracking-tight">{{ accountBook?.name || '記帳本' }}</h1>
       </div>
-      <ImportExcel @import="handleImportExcel" />
     </div>
 
     <!-- 主要內容區塊 -->
@@ -59,6 +58,7 @@ import { ref, computed, watch, onMounted, onUnmounted, inject, provide } from "v
 import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
 import TransactionDialog from "~/components/TransactionDialog.vue";
 import { collection, doc, writeBatch } from 'firebase/firestore';
+
 import { useAnalysisCache } from "~/composables/useAnalysisCache";
 import { useMonthlyTransactions } from "~/composables/useMonthlyTransactions";
 
@@ -205,44 +205,6 @@ const handleClaimAll = async (recorder: Recorder) => {
     });
   } catch (error) {
     handleError(error, '更新請款狀態失敗');
-  }
-};
-
-const handleImportExcel = async (transactions: Omit<Transaction, "id" | "createdAt" | "updatedAt">[]) => {
-  if (!transactionsInstance.value) return;
-
-  try {
-    // 過濾掉無效的資料
-    const validTransactions = transactions.filter(t => 
-      t.date && 
-      t.type && 
-      t.amount && 
-      t.category && 
-      t.recorder && 
-      t.paymentStatus
-    );
-
-    // 批次新增交易記錄
-    for (const transaction of validTransactions) {
-      await transactionsInstance.value.addTransaction(transaction);
-    }
-
-    // 清除相關分析快取
-    const { clearAccountAnalysisCache } = useAnalysisCache();
-    clearAccountAnalysisCache(selectedBookId.value);
-    
-    // 清除月度分析快取並重新載入
-    monthlyTransactionsInstance.clearCache(selectedBookId.value);
-    await monthlyTransactionsInstance.loadMonthlyTransactions(selectedBookId.value, selectedMonth.value);
-
-    // 顯示成功訊息
-    useToast().add({
-      title: '匯入成功',
-      description: `成功匯入 ${validTransactions.length} 筆交易記錄${validTransactions.length !== transactions.length ? `，跳過 ${transactions.length - validTransactions.length} 筆無效資料` : ''}`,
-      color: 'success'
-    });
-  } catch (error) {
-    handleError(error, '匯入交易記錄失敗');
   }
 };
 
