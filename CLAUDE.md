@@ -16,59 +16,93 @@ bash deploy.sh       # Build + deploy to Firebase Hosting & Functions
 
 # Firebase Functions (from functions/ directory)
 npm run deploy       # Deploy only Cloud Functions
+
+# E2E Testing (Playwright + Firebase Emulator)
+npm run emulator:start   # Start Firebase Auth (9099) + Firestore (8080) emulators
+npm run test:e2e         # Run Playwright tests (also starts dev server on port 3011)
+npm run test:e2e:ui      # Playwright interactive UI mode
 ```
 
-No test runner is configured.
+E2E tests require Firebase emulators running first. `npm run test:e2e` auto-starts a dev server on port 3011 with `NUXT_PUBLIC_USE_EMULATOR=true` injected.
 
 ## Architecture
 
-This is a **real-time collaborative accounting/bookkeeping app** built with Nuxt 3 + Firebase, deployed to Firebase Hosting.
+Real-time collaborative accounting app built with Nuxt 3 + Firebase, deployed to Firebase Hosting.
 
 ### Stack
 - **Frontend**: Nuxt 3, Vue 3, TypeScript, Tailwind CSS v4, Nuxt UI (Emerald color scheme)
 - **Backend**: Firebase (Firestore, Auth, Cloud Messaging, Cloud Functions)
-- **PWA**: `@vite-pwa/nuxt` with service worker and push notification support
+- **PWA**: `@vite-pwa/nuxt` with service worker and push notifications
 
-### Key Architectural Patterns
+### Source Layout
 
-**Source layout**: All frontend code lives under `src/client/`. Firebase Cloud Functions are in `functions/`.
+```
+src/client/
+  pages/          # File-based routing (index.vue = login, accounts.vue, account/[id].vue)
+  composables/    # All state management (no Pinia/Vuex)
+  components/     # Shared UI components
+  layouts/        # blank (login page), default (with Navbar), empty
+  plugins/        # firebase.client.ts — Firebase init (client-only)
+  types/          # accounting.ts — all shared TypeScript types
+  middleware/     # auth.ts — redirects unauthenticated users to /
+functions/        # Firebase Cloud Functions (Node.js 20)
+e2e/              # Playwright tests
+  tests/          # spec files (auth/, accounts/, transactions/)
+  fixtures/       # auth.fixture.ts — logged-in page fixture
+  helpers/        # emulator.ts — clearFirestoreData()
+  global-setup.ts # creates test user in emulator before all tests
+```
 
-**Routing**: File-based Nuxt auto-routing under `src/client/pages/`. The `auth.ts` middleware protects all routes except the root login page.
+### Firebase Initialization
 
-**State management**: No Pinia/Vuex — state lives in composables (`src/client/composables/`). Key composables:
-- `useAuth.ts` — Firebase Auth (email + Google OAuth)
-- `useFirebase.ts` — Firestore CRUD primitives
-- `useAccountBooks.ts` — Real-time account book list via `onSnapshot`
-- `useTransactions.ts` — Transaction CRUD and real-time sync
-- `useMonthlyTransactions.ts` / `useYearlyTransactions.ts` — Aggregated views
-- `useFcm.ts` — FCM token management and push notification setup
+`src/client/plugins/firebase.client.ts` initializes Firebase once and provides `$firebase` globally via `useNuxtApp().$firebase`. When `NUXT_PUBLIC_USE_EMULATOR=true`, it calls `connectAuthEmulator` / `connectFirestoreEmulator` before any auth operations. `getMessaging()` is wrapped in try/catch because the emulator doesn't support FCM.
 
-**Firebase initialization**: Done once in `src/client/plugins/firebase.client.ts` (client-only plugin). Access Firebase services via composables, not directly.
+Access Firebase services only via composables, never import from `firebase/app` directly in components.
+
+### State Management: Composables
+
+Each composable call creates **new local state** (non-singleton). Key behaviors:
+
+- **`useAuth()`** — Registers a new `onAuthStateChanged` listener on every call. `loading` starts as `true`, becomes `false` after first auth state resolution. Called in multiple files; all instances listen to the same Firebase Auth but hold separate refs.
+
+- **`useAccountBooks()`** — Sets up two `onSnapshot` listeners (owned books + shared books). Merges results sorted by `createdAt` desc. Must call `loadAccountBooks()` explicitly; `cleanup()` cancels listeners on `onUnmounted`.
+
+- **`useTransactions(bookId)`** — Takes a `bookId` param. Uses `onSnapshot` limited to 50 most recent transactions (`orderBy('date', 'desc'), limit(50)`). Call `setupRealtimeListener()` to start. Caches book permission for 10 minutes.
+
+- **`useMonthlyTransactions()`** — Uses one-time `getDocs` (not realtime), cached for 10 minutes per `accountId+month`. Provides `autoGeneratePreviousBalance()` and `monthlySummary` computed. Injected via Vue `provide`/`inject` from `account/[id].vue` to child components.
+
+- **`useCache()`** — Creates a per-call in-memory `Map`. **Not a shared singleton** — each composable instance has its own separate cache. `removePattern()` in one composable will not affect cache in another instance.
+
+- **`useErrorHandler()`** — `handleError()` always calls `alert()` + `toast.add()`. **All E2E tests must set up `page.on('dialog', dialog => dialog.accept())`** before any action that could error.
 
 ### Firestore Data Model
 
 ```
 accountBooks/{bookId}
-  name, userId (owner), sharedUsers (emails[]), createdAt, updatedAt
+  name, userId (owner UID), sharedUsers (email[]), createdAt, updatedAt, lastUpdatedBy
   transactions/{transactionId}
     type: "income"|"expense", amount, category, description,
-    date, recorder, paymentStatus: "pending"|"paid", createdAt, updatedAt
+    date (YYYY-MM-DD), recorder (displayName), paymentStatus: "pending"|"paid",
+    createdAt, updatedAt
 
 users/{userId}
   email, displayName, fcmTokens[], createdAt, updatedAt
 ```
 
+Types defined in `src/client/types/accounting.ts`. `Category` is a union type of fixed strings. `Recorder` is `string` (user displayName from Firestore, not Firebase Auth UID).
+
 ### Cloud Functions
 
-`functions/index.js` — single function `notifyOnNewTransaction`:
-- Triggered on Firestore write to `accountBooks/{bookId}/transactions/{txId}`
-- Sends FCM push notifications to account book owner + all shared users
-- Region: `asia-east1`, Node.js 20 runtime
+`functions/index.js` — `notifyOnNewTransaction` triggered on any write to `accountBooks/{bookId}/transactions/{txId}`. Sends FCM to owner + all `sharedUsers`. Region: `asia-east1`.
 
 ### Environment Variables
 
-Stored in `.env` (not committed). Required variables: Firebase config (`NUXT_PUBLIC_FIREBASE_*`), `NUXT_PUBLIC_VAPID_KEY` for web push. The `nuxt.config.ts` maps these to `runtimeConfig.public`.
+`.env` (not committed). Nuxt maps `NUXT_PUBLIC_FIREBASE_*` → `runtimeConfig.public.firebase*`. `NUXT_PUBLIC_USE_EMULATOR=true` enables emulator connections. The `nuxt.config.ts` `build:before` hook generates `public/firebase-messaging-sw.js` with baked-in Firebase config.
 
-### TypeScript Path Aliases
-- `~types` → `./types`
-- `~server` → `./src/server`
+### E2E Testing Patterns
+
+- Tests use `e2e/fixtures/auth.fixture.ts` for the `authenticatedPage` fixture (UI login)
+- After Firestore writes, `onSnapshot` fires optimistically before `addDoc` resolves — use `expect(input).toHaveValue('')` to confirm the handler completed before proceeding to next actions
+- `global-setup.ts` clears emulator data and creates `test@example.com / TestPassword123!`
+- `clearFirestoreData()` in `beforeEach` ensures test isolation
+- Login error alerts rendered as `<UAlert data-testid="login-error">` in `index.vue`

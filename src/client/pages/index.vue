@@ -30,6 +30,7 @@
 
         <UAlert
           v-if="error"
+          data-testid="login-error"
           color="error"
           variant="soft"
           :title="error"

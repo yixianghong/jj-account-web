@@ -5,9 +5,13 @@
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev --port 3010",
+    "dev:test": "nuxt dev --port 3011",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "emulator:start": "firebase emulators:start --project demo-test --only auth,firestore"
   },
   "dependencies": {
     "@internationalized/date": "^3.8.2",
@@ -40,6 +44,7 @@
     "vuedraggable": "^4.1.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.58.2",
     "sass": "^1.87.0"
   }
 }

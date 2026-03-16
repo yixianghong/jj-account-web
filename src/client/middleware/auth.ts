@@ -11,8 +11,8 @@ export default defineNuxtRouteMiddleware((to) => {
         return navigateTo('/')
     }
 
-    // 如果使用者已登入且前往登入頁面，則重定向到首頁
+    // 如果使用者已登入且前往登入頁面，則重定向到記帳本列表
     if (user.value && to.path === '/') {
-        return navigateTo('/')
+        return navigateTo('/accounts')
     }
 }) 
