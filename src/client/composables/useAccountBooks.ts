@@ -4,6 +4,15 @@ import { collection, addDoc, updateDoc, deleteDoc, doc, query, onSnapshot, where
 import { useAuth } from '~/composables/useAuth';
 import { useErrorHandler } from '~/composables/useErrorHandler';
 
+// 排序：未關閉的排前面、已關閉的沉到最後；同群組內依建立時間新到舊
+const sortBooks = (books: AccountBook[]): AccountBook[] =>
+    books.sort((a, b) => {
+        const ac = a.closed ? 1 : 0;
+        const bc = b.closed ? 1 : 0;
+        if (ac !== bc) return ac - bc;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
 export const useAccountBooks = () => {
     const { $firebase } = useNuxtApp();
     const { user, waitForAuth } = useAuth();
@@ -55,7 +64,9 @@ export const useAccountBooks = () => {
                             transactions: [], // 不載入交易記錄，節省讀取次數
                             createdAt: bookData.createdAt,
                             updatedAt: bookData.updatedAt,
-                            lastUpdatedBy: bookData.lastUpdatedBy
+                            lastUpdatedBy: bookData.lastUpdatedBy,
+                            closed: bookData.closed ?? false,
+                            closedAt: bookData.closedAt ?? null
                         } as AccountBook;
                     });
 
@@ -64,11 +75,7 @@ export const useAccountBooks = () => {
 
                     // 合併兩個查詢的結果
                     if (ownedLoaded && sharedLoaded) {
-                        const allBooks = [...ownedBooks, ...sharedBooks];
-                        // 根據建立時間排序
-                        accountBooks.value = allBooks.sort((a, b) =>
-                            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                        );
+                        accountBooks.value = sortBooks([...ownedBooks, ...sharedBooks]);
                         resolve();
                     }
                 }, (error) => {
@@ -91,7 +98,9 @@ export const useAccountBooks = () => {
                             transactions: [], // 不載入交易記錄，節省讀取次數
                             createdAt: bookData.createdAt,
                             updatedAt: bookData.updatedAt,
-                            lastUpdatedBy: bookData.lastUpdatedBy
+                            lastUpdatedBy: bookData.lastUpdatedBy,
+                            closed: bookData.closed ?? false,
+                            closedAt: bookData.closedAt ?? null
                         } as AccountBook;
                     });
 
@@ -100,11 +109,7 @@ export const useAccountBooks = () => {
 
                     // 合併兩個查詢的結果
                     if (ownedLoaded && sharedLoaded) {
-                        const allBooks = [...ownedBooks, ...sharedBooks];
-                        // 根據建立時間排序
-                        accountBooks.value = allBooks.sort((a, b) =>
-                            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                        );
+                        accountBooks.value = sortBooks([...ownedBooks, ...sharedBooks]);
                         resolve();
                     }
                 }, (error) => {
@@ -252,6 +257,14 @@ export const useAccountBooks = () => {
         });
     };
 
+    // 關閉 / 重新開啟記帳本（軟性封存，僅擁有者可操作，由 updateBook 驗證權限）
+    const setBookClosed = async (bookId: string, closed: boolean) => {
+        await updateBook(bookId, {
+            closed,
+            closedAt: closed ? new Date().toISOString() : null
+        });
+    };
+
     // 刪除記帳本
     const deleteBook = async (bookId: string) => {
         await waitForAuth();
@@ -302,6 +315,7 @@ export const useAccountBooks = () => {
         loadAccountBooks,
         createBook,
         updateBook,
+        setBookClosed,
         deleteBook,
         addSharedUser,
         removeSharedUser,

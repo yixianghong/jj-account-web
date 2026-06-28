@@ -28,6 +28,7 @@
           v-for="book in accountBooks"
           :key="book.id"
           class="relative group cursor-pointer hover:shadow-2xl transition-all duration-200 border-l-8 p-0"
+          :class="book.closed && 'opacity-50 grayscale'"
           :style="{ borderColor: getBookColor(book.id) }"
           @click="router.push(`/account/${book.id}`)"
         >
@@ -174,7 +175,7 @@
 <script setup lang="ts">
 import type { AccountBook } from '~/types/accounting';
 const router = useRouter();
-const { accountBooks, loadAccountBooks, createBook, deleteBook, addSharedUser, removeSharedUser, updateBook } = useAccountBooks();
+const { accountBooks, loadAccountBooks, createBook, deleteBook, addSharedUser, removeSharedUser, updateBook, setBookClosed } = useAccountBooks();
 const { user } = useAuth();
 const { handleError } = useErrorHandler();
 const { confirm } = useConfirm();
@@ -334,9 +335,35 @@ const handleEditBook = async () => {
   }
 };
 
+// 關閉 / 重新開啟記帳本
+const handleToggleClose = async (book: AccountBook) => {
+  const closing = !book.closed;
+  if (closing) {
+    const ok = await confirm({
+      title: '關閉記帳本',
+      message: '關閉後此記帳本會反灰並移至最後，可隨時重新開啟。確定要關閉嗎？',
+      confirmText: '關閉',
+      color: 'warning',
+    });
+    if (!ok) return;
+  }
+
+  try {
+    await setBookClosed(book.id, closing);
+    useToast().add({
+      title: closing ? '已關閉' : '已重新開啟',
+      description: closing ? '記帳本已關閉' : '記帳本已重新開啟',
+      color: 'success'
+    });
+  } catch (error) {
+    handleError(error, closing ? '無法關閉記帳本，請稍後再試' : '無法重新開啟記帳本，請稍後再試');
+  }
+};
+
 // Splitwise 風格：帳本操作選單
 function getBookActions(book: AccountBook) {
-  console.log(book);
+  // 僅擁有者可操作關閉 / 重新開啟
+  const isOwner = book.userId === user.value?.uid;
   return [
     [
       {
@@ -349,6 +376,11 @@ function getBookActions(book: AccountBook) {
         icon: 'i-heroicons-share',
         onSelect: () => openShareDialog(book)
       },
+      ...(isOwner ? [{
+        label: book.closed ? '重新開啟' : '關閉',
+        icon: book.closed ? 'i-heroicons-lock-open' : 'i-heroicons-archive-box',
+        onSelect: () => handleToggleClose(book)
+      }] : []),
       {
         label: '刪除',
         icon: 'i-heroicons-trash',

@@ -57,4 +57,8 @@ export interface AccountBook {
   createdAt: string;
   updatedAt: string;
   lastUpdatedBy?: string;
+  // 是否已關閉（軟性封存）：UI 反灰並排序至最後；未設定時視為 false
+  closed?: boolean;
+  // 關閉時間（選用），重新開啟時清為 null
+  closedAt?: string | null;
 }
