@@ -1,20 +1,24 @@
-import { ref } from 'vue'
-
 interface CacheItem<T> {
   data: T
   timestamp: number
   ttl: number // Time to live in milliseconds
 }
 
+// 模組層級的共享快取（單例）——所有 useCache() 呼叫共用同一份快取，
+// 這樣 removePattern 等失效操作才能跨 composable 生效
+// （例如 useAnalysisCache 失效 useMonthlyTransactions 寫入的快取）
+const cache = new Map<string, CacheItem<unknown>>()
+
+// 預設快取時間：5分鐘
+const DEFAULT_TTL = 5 * 60 * 1000
+
+// 確保定期清理計時器只啟動一次
+let cleanupTimerStarted = false
+
 export const useCache = () => {
-  const cache = ref<Map<string, CacheItem<any>>>(new Map())
-
-  // 預設快取時間：5分鐘
-  const DEFAULT_TTL = 5 * 60 * 1000
-
   // 設定快取
   const set = <T>(key: string, data: T, ttl: number = DEFAULT_TTL) => {
-    cache.value.set(key, {
+    cache.set(key, {
       data,
       timestamp: Date.now(),
       ttl
@@ -23,26 +27,26 @@ export const useCache = () => {
 
   // 取得快取
   const get = <T>(key: string): T | null => {
-    const item = cache.value.get(key)
+    const item = cache.get(key)
     if (!item) return null
 
     // 檢查是否過期
     if (Date.now() - item.timestamp > item.ttl) {
-      cache.value.delete(key)
+      cache.delete(key)
       return null
     }
 
-    return item.data
+    return item.data as T
   }
 
   // 檢查快取是否存在且有效
   const has = (key: string): boolean => {
-    const item = cache.value.get(key)
+    const item = cache.get(key)
     if (!item) return false
 
     // 檢查是否過期
     if (Date.now() - item.timestamp > item.ttl) {
-      cache.value.delete(key)
+      cache.delete(key)
       return false
     }
 
@@ -51,42 +55,37 @@ export const useCache = () => {
 
   // 刪除快取
   const remove = (key: string) => {
-    cache.value.delete(key)
+    cache.delete(key)
   }
 
   // 刪除符合模式的快取（支援萬用字元 *）
   const removePattern = (pattern: string) => {
-    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
-    let deletedCount = 0;
-
-    for (const key of cache.value.keys()) {
+    const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$')
+    for (const key of cache.keys()) {
       if (regex.test(key)) {
-        cache.value.delete(key);
-        deletedCount++;
-        console.log(`已刪除快取: ${key}`);
+        cache.delete(key)
       }
     }
-
-    console.log(`removePattern("${pattern}") 共刪除了 ${deletedCount} 個快取項目`);
   }
 
   // 清除所有快取
   const clear = () => {
-    cache.value.clear()
+    cache.clear()
   }
 
   // 清除過期的快取
   const cleanup = () => {
     const now = Date.now()
-    for (const [key, item] of cache.value.entries()) {
+    for (const [key, item] of cache.entries()) {
       if (now - item.timestamp > item.ttl) {
-        cache.value.delete(key)
+        cache.delete(key)
       }
     }
   }
 
-  // 定期清理過期快取（每分鐘執行一次）
-  if (process.client) {
+  // 定期清理過期快取（每分鐘執行一次）——整個應用程式只啟動一次
+  if (import.meta.client && !cleanupTimerStarted) {
+    cleanupTimerStarted = true
     setInterval(cleanup, 60 * 1000)
   }
 
@@ -99,4 +98,4 @@ export const useCache = () => {
     clear,
     cleanup
   }
-} 
+}
