@@ -21,6 +21,7 @@ export default defineNuxtConfig({
     "@nuxt/ui",
     "@nuxt/icon",
     "@nuxt/image",
+    "@nuxt/eslint",
     "@vite-pwa/nuxt",
   ],
   css: ["~/assets/css/main.css"],
