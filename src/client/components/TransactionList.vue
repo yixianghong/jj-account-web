@@ -60,8 +60,16 @@ const emit = defineEmits<{
   (e: "update" | "edit", transaction: Transaction): void;
 }>();
 
-const handleDelete = (id: string) => {
-  if (confirm("確定要刪除這筆記帳嗎？")) {
+const { confirm } = useConfirm();
+
+const handleDelete = async (id: string) => {
+  const ok = await confirm({
+    title: "刪除記帳",
+    message: "確定要刪除這筆記帳嗎？",
+    confirmText: "刪除",
+    color: "error",
+  });
+  if (ok) {
     emit("delete", id);
   }
 };

@@ -258,8 +258,15 @@ const handleNextMonth = () => {
   loadMonthlyTransactions(props.accountId, newMonth);
 };
 
-const handleClaimAll = (recorder: Recorder) => {
-  if (confirm(`確定要請款 ${recorder} 的所有未請款項目嗎？`)) {
+const { confirm } = useConfirm();
+
+const handleClaimAll = async (recorder: Recorder) => {
+  const ok = await confirm({
+    title: "批次請款",
+    message: `確定要請款 ${recorder} 的所有未請款項目嗎？`,
+    confirmText: "請款",
+  });
+  if (ok) {
     emit("claimAll", recorder);
   }
 };
@@ -313,7 +320,12 @@ const handleGenerateBalance = async () => {
     const amount = balanceCheckResult.value.amount;
     const previousMonth = balanceCheckResult.value.previousMonth;
     
-    if (confirm(`確定要產生上期結餘嗎？\n金額：$${amount.toLocaleString()}\n來源：${previousMonth} 結餘`)) {
+    const ok = await confirm({
+      title: '產生上期結餘',
+      message: `確定要產生上期結餘嗎？\n金額：$${amount.toLocaleString()}\n來源：${previousMonth} 結餘`,
+      confirmText: '產生',
+    });
+    if (ok) {
       await instance.createPreviousBalanceTransaction?.(props.accountId, amount);
       
       useToast().add({

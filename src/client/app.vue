@@ -3,11 +3,14 @@
     <div class="min-h-screen bg-gray-50">
       <NuxtLayout>
         <NuxtPage
-:transition="{
-          name: 'fade',
-          mode: 'out-in',
-        }" />
+          :transition="{
+            name: 'fade',
+            mode: 'out-in',
+          }"
+        />
       </NuxtLayout>
+      <!-- 全域確認彈窗 -->
+      <AppConfirmModal />
       <!-- PWA 安裝提示 -->
       <PwaInstallPrompt />
       <!-- PWA 更新提示 -->

@@ -49,7 +49,8 @@ test('可以刪除交易記錄', async ({ authenticatedPage }) => {
     // 開啟操作選單並點擊「刪除」
     await openTransactionMenu(page, '測試費用');
     await page.getByRole('menuitem', { name: '刪除' }).click();
-    // confirm 對話框由 fixture 的 dialog handler 自動接受
+    // 點擊確認彈窗的「刪除」按鈕
+    await page.getByRole('dialog').getByRole('button', { name: '刪除' }).click();
 
     // 驗證交易已從列表中移除
     await expect(page.locator('text=測試費用')).not.toBeVisible({ timeout: 10000 });

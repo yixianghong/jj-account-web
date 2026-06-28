@@ -87,6 +87,26 @@
                 />
               </UFormField>
             </form>
+
+            <!-- 目前共享對象列表 -->
+            <div v-if="sharedUsersOfSelected.length" class="mt-6 space-y-2">
+              <p class="text-sm font-medium text-gray-700">目前共享對象</p>
+              <div
+                v-for="email in sharedUsersOfSelected"
+                :key="email"
+                class="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2"
+              >
+                <span class="text-sm text-gray-700 truncate">{{ email }}</span>
+                <UButton
+                  icon="i-heroicons-x-mark"
+                  color="error"
+                  variant="ghost"
+                  size="xs"
+                  aria-label="移除共享使用者"
+                  @click="handleRemoveSharedUser(email)"
+                />
+              </div>
+            </div>
           </template>
             <template #footer>
               <div class="flex justify-end gap-4">
@@ -154,9 +174,10 @@
 <script setup lang="ts">
 import type { AccountBook } from '~/types/accounting';
 const router = useRouter();
-const { accountBooks, loadAccountBooks, createBook, deleteBook, addSharedUser, updateBook } = useAccountBooks();
+const { accountBooks, loadAccountBooks, createBook, deleteBook, addSharedUser, removeSharedUser, updateBook } = useAccountBooks();
 const { user } = useAuth();
 const { handleError } = useErrorHandler();
+const { confirm } = useConfirm();
 
 const newBookName = ref('');
 const showShareDialog = ref(false);
@@ -165,6 +186,13 @@ const selectedBook = ref<AccountBook | null>(null);
 const showEditDialog = ref(false);
 const editBookName = ref('');
 const editingBook = ref<AccountBook | null>(null);
+
+// 共享對話框中目前的共享對象（從 accountBooks 即時取得，移除後會自動更新）
+const sharedUsersOfSelected = computed(() => {
+  if (!selectedBook.value) return [];
+  const book = accountBooks.value.find(b => b.id === selectedBook.value!.id);
+  return book?.sharedUsers ?? [];
+});
 
 // Splitwise 風格：帳本顏色（根據 id hash 產生顏色）
 function getBookColor(id: string) {
@@ -202,9 +230,13 @@ const handleCreateBook = async () => {
 
 // 刪除記帳本
 const handleDeleteBook = async (bookId: string) => {
-  if (!confirm('確定要刪除此記帳本嗎？此操作無法復原。')) {
-    return;
-  }
+  const ok = await confirm({
+    title: '刪除記帳本',
+    message: '確定要刪除此記帳本嗎？此操作無法復原。',
+    confirmText: '刪除',
+    color: 'error',
+  });
+  if (!ok) return;
 
   try {
     await deleteBook(bookId);
@@ -252,6 +284,22 @@ const handleAddSharedUser = async () => {
     });
   } catch (error) {
     handleError(error);
+  }
+};
+
+// 移除共享使用者（可逆、低風險操作，於共享對話框內直接移除，避免巢狀 Modal）
+const handleRemoveSharedUser = async (email: string) => {
+  if (!selectedBook.value) return;
+
+  try {
+    await removeSharedUser(selectedBook.value.id, email);
+    useToast().add({
+      title: '移除成功',
+      description: `已移除 ${email} 的存取權限`,
+      color: 'success'
+    });
+  } catch (error) {
+    handleError(error, '無法移除共享使用者，請稍後再試');
   }
 };
 
