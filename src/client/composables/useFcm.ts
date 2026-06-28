@@ -23,11 +23,12 @@ export const useFcm = () => {
             if (!token) return;
 
             // token 沒變就不寫 Firestore
-            const storageKey = `fcmToken_${uid}`;
+            // v2：token 改存於 users/{uid}/private/fcm（僅本人可讀），換 key 以強制既有使用者重新註冊到新位置
+            const storageKey = `fcmToken_v2_${uid}`;
             const savedToken = localStorage.getItem(storageKey);
             if (savedToken !== token) {
-                await setDoc(doc($firebase.db, 'users', uid), {
-                    fcmTokens: arrayUnion(token),
+                await setDoc(doc($firebase.db, 'users', uid, 'private', 'fcm'), {
+                    tokens: arrayUnion(token),
                     updatedAt: new Date().toISOString(),
                 }, { merge: true });
                 localStorage.setItem(storageKey, token);

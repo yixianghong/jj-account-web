@@ -45,10 +45,17 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // 已登入者可讀取（顯示記錄者暱稱、共享時以 email 查詢使用者）
+      // 公開資料（email、displayName）：已登入者可讀取
+      // （顯示記錄者暱稱、共享時以 email 查詢使用者）
       allow read: if isSignedIn();
       // 只能寫入自己的使用者文件
       allow write: if isSignedIn() && request.auth.uid == userId;
+
+      // 私密資料（如 fcmTokens）：僅本人可讀寫
+      // Cloud Functions 以 Admin SDK 存取，不受此規則限制
+      match /private/{docId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
     }
 
     // 其餘路徑一律拒絕

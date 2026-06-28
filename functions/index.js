@@ -28,28 +28,35 @@ exports.notifyOnNewTransaction = onDocumentCreated(
         const ownerUid = book.userId;
         const sharedEmails = book.sharedUsers || [];
 
-        const tokens = [];
+        // 收集 FCM token，並記錄每個 token 來自哪個文件（供失效時清除）
+        const tokenEntries = []; // { token, ref }
 
-        // 取得擁有者的 FCM tokens
-        const ownerSnap = await db.doc(`users/${ownerUid}`).get();
-        if (ownerSnap.exists) {
-            const ownerTokens = ownerSnap.data().fcmTokens || [];
-            tokens.push(...ownerTokens);
-        }
+        const addTokensFrom = async (fcmRef) => {
+            const snap = await fcmRef.get();
+            if (snap.exists) {
+                (snap.data().tokens || []).forEach((token) => {
+                    tokenEntries.push({ token, ref: fcmRef });
+                });
+            }
+        };
 
-        // 取得共享使用者的 FCM tokens（用 email 查詢）
+        // 擁有者的 token（存於私密子集合 users/{uid}/private/fcm）
+        await addTokensFrom(db.doc(`users/${ownerUid}/private/fcm`));
+
+        // 共享使用者的 token（先用 email 查 uid，再讀各自的私密子集合）
         if (sharedEmails.length > 0) {
             const usersSnap = await db.collection('users')
                 .where('email', 'in', sharedEmails)
                 .get();
-
-            usersSnap.docs.forEach(doc => {
-                const userTokens = doc.data().fcmTokens || [];
-                tokens.push(...userTokens);
-            });
+            await Promise.all(
+                usersSnap.docs.map((userDoc) =>
+                    addTokensFrom(db.doc(`users/${userDoc.id}/private/fcm`))
+                )
+            );
         }
 
-        console.log('收集到的 tokens 數量:', tokens);
+        const tokens = tokenEntries.map((e) => e.token);
+        console.log('收集到的 tokens 數量:', tokens.length);
         if (tokens.length === 0) {
             console.log('沒有 FCM token，結束');
             return;
@@ -70,5 +77,36 @@ exports.notifyOnNewTransaction = onDocumentCreated(
 
         const response = await admin.messaging().sendEachForMulticast(message);
         console.log(`推播結果：成功 ${response.successCount}，失敗 ${response.failureCount}`);
+
+        // 清除失效的 token（依來源文件分組後以 arrayRemove 移除），避免死 token 無限累積
+        const invalidByRef = new Map(); // ref.path -> { ref, tokens: [] }
+        response.responses.forEach((resp, i) => {
+            if (resp.success) return;
+            const code = resp.error?.code;
+            if (
+                code === 'messaging/registration-token-not-registered' ||
+                code === 'messaging/invalid-registration-token' ||
+                code === 'messaging/invalid-argument'
+            ) {
+                const { token, ref } = tokenEntries[i];
+                if (!invalidByRef.has(ref.path)) {
+                    invalidByRef.set(ref.path, { ref, tokens: [] });
+                }
+                invalidByRef.get(ref.path).tokens.push(token);
+            }
+        });
+
+        if (invalidByRef.size > 0) {
+            const refs = [...invalidByRef.values()];
+            await Promise.all(
+                refs.map(({ ref, tokens: badTokens }) =>
+                    ref.update({
+                        tokens: admin.firestore.FieldValue.arrayRemove(...badTokens),
+                    })
+                )
+            );
+            const removed = refs.reduce((n, x) => n + x.tokens.length, 0);
+            console.log(`已清除 ${removed} 個失效 token`);
+        }
     }
 );
