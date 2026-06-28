@@ -12,12 +12,16 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { useErrorHandler } from '~/composables/useErrorHandler'
 
+// 模組層級的共享狀態（單例）——所有 useAuth() 呼叫共用同一份狀態與同一個監聽器，
+// 避免每次呼叫都註冊新的 onAuthStateChanged 造成記憶體洩漏與重複觸發
+const user = ref<User | null>(null)
+const loading = ref(true)
+const error = ref<string | null>(null)
+let authListenerRegistered = false
+
 export const useAuth = () => {
     const nuxtApp = useNuxtApp()
     const { handleError } = useErrorHandler()
-    const user = ref<User | null>(null)
-    const loading = ref(true)
-    const error = ref<string | null>(null)
 
     // 確保使用者資料存在於 Firestore
     const ensureUserData = async (user: User) => {
@@ -45,10 +49,11 @@ export const useAuth = () => {
         }
     }
 
-    // 確保只在客戶端執行
-    if (import.meta.client) {
+    // 確保只在客戶端執行，且整個應用程式只註冊一次認證狀態監聽器
+    if (import.meta.client && !authListenerRegistered) {
         const auth = nuxtApp.$firebase?.auth
         if (auth) {
+            authListenerRegistered = true
             // 監聽認證狀態
             onAuthStateChanged(auth, async (newUser) => {
                 user.value = newUser
