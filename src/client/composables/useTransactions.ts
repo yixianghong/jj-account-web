@@ -163,28 +163,29 @@ export const useTransactions = (bookId: string) => {
             if (!hasPermission) return;
 
             const transactionsRef = collection($firebase.db, 'accountBooks', bookId, 'transactions');
-            const q = query(
-                transactionsRef,
+            const constraints = [
                 where('recorder', '==', recorder),
                 where('type', '==', 'expense'),
-                where('paymentStatus', '==', status === 'paid' ? 'pending' : 'paid')
-            );
+                where('paymentStatus', '==', status === 'paid' ? 'pending' : 'paid'),
+            ];
 
+            // 如果有指定月份，直接以日期範圍在 Firestore 端過濾，避免抓回整批再用 JS 篩選
+            // 日期格式為 'YYYY-MM-DD'，月份格式為 'YYYY-MM'，字串比較等同時間順序
+            if (month) {
+                const [year, monthNum] = month.split('-').map(Number);
+                const nextMonth = monthNum === 12
+                    ? `${year + 1}-01`
+                    : `${year}-${String(monthNum + 1).padStart(2, '0')}`;
+                constraints.push(where('date', '>=', `${month}-01`));
+                constraints.push(where('date', '<', `${nextMonth}-01`));
+            }
+
+            const q = query(transactionsRef, ...constraints);
             const querySnapshot = await getDocs(q);
             const batch = writeBatch($firebase.db);
 
-            // 如果有指定月份，則只更新該月份的交易記錄
-            const docsToUpdate = month
-                ? querySnapshot.docs.filter(doc => {
-                    const date = doc.data().date as string;
-                    // 日期格式為 'YYYY-MM-DD'，月份格式為 'YYYY-MM'
-                    return date.startsWith(month);
-                })
-                : querySnapshot.docs;
-
-            docsToUpdate.forEach((doc) => {
-                const transactionRef = doc.ref;
-                batch.update(transactionRef, {
+            querySnapshot.docs.forEach((doc) => {
+                batch.update(doc.ref, {
                     paymentStatus: status,
                     updatedAt: new Date().toISOString(),
                 });
