@@ -7,7 +7,7 @@ export const useTransactions = (bookId: string) => {
     const { $firebase } = useNuxtApp();
     const { user, loading: authLoading } = useAuth();
     const { handleError } = useErrorHandler();
-    const { set: setCache, get: getCache, has: hasCache, remove: removeCache, removePattern } = useCache();
+    const { set: setCache, get: getCache, has: hasCache, removePattern } = useCache();
 
     const transactions = ref<Transaction[]>([]);
     const loading = ref(false);

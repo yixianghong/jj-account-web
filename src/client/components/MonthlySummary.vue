@@ -205,17 +205,23 @@ const monthlyTransactionsInstance = inject('monthlyTransactions') as ReturnType<
 const instance = monthlyTransactionsInstance || useMonthlyTransactions();
 
 const {
-  monthlyTransactions,
   selectedMonth,
   loading,
   loadMonthlyTransactions,
   changeMonth,
-  monthlySummary,
-  updateSelectedMonth
+  monthlySummary
 } = instance;
 
+// 上期結餘檢查結果
+interface BalanceCheckResult {
+  status: string;
+  amount?: number;
+  message?: string;
+  previousMonth?: string;
+}
+
 // 上期結餘檢查狀態
-const balanceCheckResult = ref<any>(null);
+const balanceCheckResult = ref<BalanceCheckResult | null>(null);
 const isCheckingBalance = ref(false);
 
 // 初始化載入資料
@@ -262,7 +268,7 @@ const handleClaimAll = (recorder: Recorder) => {
 const handleCheckBalance = async () => {
   isCheckingBalance.value = true;
   try {
-    const result = await (instance as any).autoGeneratePreviousBalance?.(props.accountId);
+    const result = await instance.autoGeneratePreviousBalance?.(props.accountId);
     balanceCheckResult.value = result;
     
     // 根據結果顯示訊息
@@ -308,7 +314,7 @@ const handleGenerateBalance = async () => {
     const previousMonth = balanceCheckResult.value.previousMonth;
     
     if (confirm(`確定要產生上期結餘嗎？\n金額：$${amount.toLocaleString()}\n來源：${previousMonth} 結餘`)) {
-      await (instance as any).createPreviousBalanceTransaction?.(props.accountId, amount);
+      await instance.createPreviousBalanceTransaction?.(props.accountId, amount);
       
       useToast().add({
         title: '✓ 已產生上期結餘',

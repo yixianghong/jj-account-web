@@ -116,7 +116,9 @@ import {
   Tooltip,
   Legend,
   Filler,
-  ArcElement
+  ArcElement,
+  type ChartOptions,
+  type TooltipItem
 } from 'chart.js';
 
 // 註冊 Chart.js 元件
@@ -138,13 +140,11 @@ const props = defineProps<{
 
 // 使用年度交易 composable
 const {
-  yearlyTransactions,
   selectedYear,
   loading,
   loadYearlyTransactions,
   changeYear,
-  yearlySummary,
-  updateSelectedYear
+  yearlySummary
 } = useYearlyTransactions();
 
 // 初始化載入資料
@@ -243,7 +243,7 @@ const pieChartData = computed(() => {
 });
 
 // Chart.js 選項配置
-const chartOptions: any = {
+const chartOptions: ChartOptions<'line'> = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -263,7 +263,7 @@ const chartOptions: any = {
       cornerRadius: 8,
       displayColors: true,
       callbacks: {
-        label: function(context: any) {
+        label: function(context: TooltipItem<'line'>) {
           return `${context.dataset.label}: $${context.parsed.y.toLocaleString()}`;
         }
       }
@@ -288,7 +288,7 @@ const chartOptions: any = {
       },
       ticks: {
         color: '#6b7280',
-        callback: function(value: any) {
+        callback: function(value: number | string) {
           return '$' + value.toLocaleString();
         }
       }
@@ -301,7 +301,7 @@ const chartOptions: any = {
 };
 
 // 圓餅圖選項配置
-const pieChartOptions: any = {
+const pieChartOptions: ChartOptions<'pie'> = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -324,7 +324,7 @@ const pieChartOptions: any = {
       cornerRadius: 8,
       displayColors: true,
       callbacks: {
-        label: function(context: any) {
+        label: function(context: TooltipItem<'pie'>) {
           const label = context.label || '';
           const value = context.parsed;
           const total = context.dataset.data.reduce((a: number, b: number) => a + b, 0);

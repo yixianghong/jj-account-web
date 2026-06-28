@@ -57,8 +57,7 @@ defineProps<{
 
 const emit = defineEmits<{
   (e: "delete", id: string): void;
-  (e: "update", transaction: Transaction): void;
-  (e: "edit", transaction: Transaction): void;
+  (e: "update" | "edit", transaction: Transaction): void;
 }>();
 
 const handleDelete = (id: string) => {

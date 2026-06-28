@@ -17,9 +17,9 @@
         </div>
         <div class="flex space-x-2">
           <button
-            @click="updatePwa"
             :disabled="isUpdating"
             class="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
+            @click="updatePwa"
           >
             <Icon 
               v-if="isUpdating" 
@@ -29,9 +29,9 @@
             <span>{{ isUpdating ? '更新中...' : '更新' }}</span>
           </button>
           <button
-            @click="dismissUpdate"
             :disabled="isUpdating"
             class="px-3 py-1.5 text-blue-600 text-xs font-medium hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="dismissUpdate"
           >
             稍後
           </button>

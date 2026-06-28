@@ -95,8 +95,8 @@
                 :variant="form.paymentStatus === 'pending' ? 'solid' : 'outline'"
                 :color="form.paymentStatus === 'pending' ? 'warning' : 'neutral'"
                 class="flex-1  text-sm font-medium"
-                @click="form.paymentStatus = 'pending'"
                 :disabled="form.type === 'income'"
+                @click="form.paymentStatus = 'pending'"
               >
                 未請款
               </UButton>
@@ -104,8 +104,8 @@
                 :variant="form.paymentStatus === 'paid' ? 'solid' : 'outline'"
                 :color="form.paymentStatus === 'paid' ? 'success' : 'neutral'"
                 class="flex-1  text-sm font-medium"
-                @click="form.paymentStatus = 'paid'"
                 :disabled="form.type === 'income'"
+                @click="form.paymentStatus = 'paid'"
               >
                 已請款
               </UButton>
@@ -127,8 +127,8 @@
                 'recorder-avatar--selected': form.recorder === option.value,
                 'recorder-avatar--unselected': form.recorder !== option.value
               }"
-              @click="form.recorder = option.value"
               :title="option.label"
+              @click="form.recorder = option.value"
             >
               <span class="recorder-avatar__text">
                 {{ option.label.charAt(0) }}
@@ -162,7 +162,6 @@ import type {
   PaymentStatus,
   Category,
   AccountBook,
-  Recorder,
 } from "~/types/accounting";
 import { CATEGORIES } from "~/types/accounting";
 import { useAuth } from "~/composables/useAuth";

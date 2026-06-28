@@ -47,14 +47,14 @@
       color="primary"
       icon="i-heroicons-plus"
       class="fixed bottom-6 right-6 z-50 rounded-full w-16 h-16 flex items-center justify-center shadow-2xl text-3xl"
-      @click="openTransactionDialog('add')"
       aria-label="新增記帳"
+      @click="openTransactionDialog('add')"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, inject, provide } from "vue";
+import { ref, watch, onMounted, onUnmounted, provide } from "vue";
 import type { Transaction, Recorder, AccountBook } from "~/types/accounting";
 import TransactionDialog from "~/components/TransactionDialog.vue";
 import { collection, doc, writeBatch } from 'firebase/firestore';
@@ -126,26 +126,6 @@ watch(selectedBookId, async (newBookId) => {
     transactionsInstance.value = null;
   }
 });
-
-const handleAddTransaction = async (
-  transaction: Omit<Transaction, "id" | "createdAt" | "updatedAt">
-) => {
-  if (!transactionsInstance.value) return;
-  
-  try {
-    await transactionsInstance.value.addTransaction(transaction);
-    
-    // 清除相關分析快取
-    const { clearAccountAnalysisCache } = useAnalysisCache();
-    clearAccountAnalysisCache(selectedBookId.value);
-    
-    // 清除月度分析快取並重新載入
-    monthlyTransactionsInstance.clearCache(selectedBookId.value);
-    await monthlyTransactionsInstance.loadMonthlyTransactions(selectedBookId.value, selectedMonth.value);
-  } catch (error) {
-    handleError(error, '新增交易記錄失敗');
-  }
-};
 
 const handleDeleteTransaction = async (id: string) => {
   if (!transactionsInstance.value) return;

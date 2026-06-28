@@ -7,14 +7,14 @@ export const usePwa = () => {
 
   // 檢查是否已安裝
   const checkInstallation = () => {
-    if (process.client) {
+    if (import.meta.client) {
       isInstalled.value = window.matchMedia('(display-mode: standalone)').matches
     }
   }
 
   // 檢查網路狀態
   const checkOnlineStatus = () => {
-    if (process.client) {
+    if (import.meta.client) {
       isOnline.value = navigator.onLine
     }
   }
@@ -47,7 +47,7 @@ export const usePwa = () => {
 
   // 重新載入應用程式
   const reload = () => {
-    if (process.client) {
+    if (import.meta.client) {
       window.location.reload()
     }
   }
@@ -58,7 +58,7 @@ export const usePwa = () => {
     checkOnlineStatus()
 
     // 監聽網路狀態變化
-    if (process.client) {
+    if (import.meta.client) {
       window.addEventListener('online', checkOnlineStatus)
       window.addEventListener('offline', checkOnlineStatus)
     }
@@ -75,7 +75,7 @@ export const usePwa = () => {
   })
 
   onUnmounted(() => {
-    if (process.client) {
+    if (import.meta.client) {
       window.removeEventListener('online', checkOnlineStatus)
       window.removeEventListener('offline', checkOnlineStatus)
     }

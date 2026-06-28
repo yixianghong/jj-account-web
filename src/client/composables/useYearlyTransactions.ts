@@ -1,13 +1,13 @@
 import { ref, computed } from 'vue';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
-import type { Transaction, Category, Recorder } from '~/types/accounting';
+import type { Transaction, Category } from '~/types/accounting';
 import { useCache } from '~/composables/useCache';
 
 export const useYearlyTransactions = () => {
   const yearlyTransactions = ref<Transaction[]>([]);
   const selectedYear = ref(new Date().toISOString().slice(0, 7)); // 改為月份格式
   const loading = ref(false);
-  const { set: setCache, get: getCache, has: hasCache, remove: removeCache, removePattern } = useCache();
+  const { set: setCache, get: getCache, has: hasCache, removePattern } = useCache();
 
   // 計算滾動年度的開始和結束日期
   const getRollingYearRange = (endMonth: string) => {
@@ -130,7 +130,6 @@ export const useYearlyTransactions = () => {
 
     const { startMonth, endMonth } = getRollingYearRange(selectedYear.value);
     const [startYear, startMonthNum] = startMonth.split('-').map(Number);
-    const [endYear, endMonthNum] = endMonth.split('-').map(Number);
 
     // 生成12個月的標籤和資料
     for (let i = 0; i < 12; i++) {

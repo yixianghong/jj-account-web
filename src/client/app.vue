@@ -2,7 +2,8 @@
   <UApp :toaster="{ position: 'top-right', duration: 5000 }">
     <div class="min-h-screen bg-gray-50">
       <NuxtLayout>
-        <NuxtPage :transition="{
+        <NuxtPage
+:transition="{
           name: 'fade',
           mode: 'out-in',
         }" />

@@ -17,14 +17,14 @@
         </div>
         <div class="flex space-x-2">
           <button
-            @click="installPwa"
             class="px-3 py-1.5 bg-blue-500 text-white text-xs font-medium rounded-md hover:bg-blue-600 transition-colors"
+            @click="installPwa"
           >
             安裝
           </button>
           <button
-            @click="dismissPrompt"
             class="px-3 py-1.5 text-gray-500 text-xs font-medium hover:text-gray-700 dark:hover:text-gray-300 transition-colors"
+            @click="dismissPrompt"
           >
             稍後
           </button>
@@ -35,16 +35,20 @@
 </template>
 
 <script setup lang="ts">
-const { $pwa } = useNuxtApp()
+// beforeinstallprompt 事件非標準 DOM 型別，於此自行宣告所需介面
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
 
 const showInstallPrompt = ref(false)
-const deferredPrompt = ref<any>(null)
+const deferredPrompt = ref<BeforeInstallPromptEvent | null>(null)
 
 // 監聽 beforeinstallprompt 事件
 onMounted(() => {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault()
-    deferredPrompt.value = e
+    deferredPrompt.value = e as BeforeInstallPromptEvent
     showInstallPrompt.value = true
   })
 

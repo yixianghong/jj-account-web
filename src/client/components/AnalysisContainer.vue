@@ -38,19 +38,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, inject } from "vue";
+import { ref } from "vue";
 import type { Recorder } from "~/types/accounting";
 
-const props = defineProps<{
+defineProps<{
   accountId: string;
 }>();
 
 const emit = defineEmits<{
   (e: "claimAll", recorder: Recorder): void;
 }>();
-
-// 使用注入的共享月度交易實體
-const monthlyTransactionsInstance = inject('monthlyTransactions') as ReturnType<typeof useMonthlyTransactions> | undefined;
 
 const activeTab = ref<'monthly' | 'yearly'>('monthly');
 

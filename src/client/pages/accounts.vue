@@ -154,7 +154,7 @@
 <script setup lang="ts">
 import type { AccountBook } from '~/types/accounting';
 const router = useRouter();
-const { accountBooks, loadAccountBooks, createBook, deleteBook, addSharedUser, removeSharedUser, updateBook } = useAccountBooks();
+const { accountBooks, loadAccountBooks, createBook, deleteBook, addSharedUser, updateBook } = useAccountBooks();
 const { user } = useAuth();
 const { handleError } = useErrorHandler();
 
@@ -252,24 +252,6 @@ const handleAddSharedUser = async () => {
     });
   } catch (error) {
     handleError(error);
-  }
-};
-
-// 移除共享使用者
-const handleRemoveSharedUser = async (bookId: string, email: string) => {
-  if (!confirm(`確定要移除 ${email} 的存取權限嗎？`)) {
-    return;
-  }
-
-  try {
-    await removeSharedUser(bookId, email);
-    useToast().add({
-      title: '移除成功',
-      description: '已移除共享使用者',
-      color: 'success'
-    });
-  } catch (error) {
-    handleError(error, '無法移除共享使用者，請稍後再試');
   }
 };
 

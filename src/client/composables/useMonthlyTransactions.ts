@@ -1,13 +1,13 @@
 import { ref, computed } from 'vue';
 import { collection, query, where, orderBy, getDocs, addDoc } from 'firebase/firestore';
-import type { Transaction, Category, Recorder } from '~/types/accounting';
+import type { Transaction, Category } from '~/types/accounting';
 import { useCache } from '~/composables/useCache';
 
 export const useMonthlyTransactions = () => {
   const monthlyTransactions = ref<Transaction[]>([]);
   const selectedMonth = ref(new Date().toISOString().slice(0, 7));
   const loading = ref(false);
-  const { set: setCache, get: getCache, has: hasCache, remove: removeCache, removePattern } = useCache();
+  const { set: setCache, get: getCache, has: hasCache, removePattern } = useCache();
 
   // 輔助函數：取得上個月的月份字串
   const getPreviousMonth = (month: string): string => {

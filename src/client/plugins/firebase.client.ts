@@ -27,15 +27,15 @@ export default defineNuxtPlugin(() => {
     // 連接到 Firebase 本地模擬器（測試環境）
     const isEmulator = config.public.useEmulator === true || String(config.public.useEmulator) === 'true';
     if (isEmulator) {
-        try { connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true }); } catch (_) {}
-        try { connectFirestoreEmulator(db, '127.0.0.1', 8080); } catch (_) {}
+        try { connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true }); } catch { /* 已連線則忽略 */ }
+        try { connectFirestoreEmulator(db, '127.0.0.1', 8080); } catch { /* 已連線則忽略 */ }
     }
 
     // FCM 在模擬器環境下不支援，以 try/catch 包裹
     let messaging: ReturnType<typeof getMessaging> | null = null;
     try {
         messaging = getMessaging(app);
-    } catch (_) {
+    } catch {
         // Emulator 環境無 FCM 支援，靜默忽略
     }
 
