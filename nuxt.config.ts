@@ -60,15 +60,11 @@ firebase.initializeApp({
   appId: "${process.env.FIREBASE_APP_ID}"
 });
 
-const messaging = firebase.messaging();
-
-messaging.onBackgroundMessage((payload) => {
-  const { title, body } = payload.notification;
-  self.registration.showNotification(title, {
-    body,
-    icon: '/icons/icon-192x192.png',
-  });
-});
+// 初始化 messaging 以接收背景推播。
+// 注意：訊息帶有 notification payload 時，Firebase SDK 會在背景「自動顯示」通知，
+// 因此不可再於 onBackgroundMessage 內手動 showNotification，否則會收到兩則一模一樣的通知。
+// 通知外觀（icon 等）由 Cloud Function 的 webpush.notification 設定。
+firebase.messaging();
 `;
       fs.writeFileSync(
         path.resolve('./src/client/public/firebase-messaging-sw.js'),

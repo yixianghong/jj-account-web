@@ -72,6 +72,13 @@ exports.notifyOnNewTransaction = onDocumentCreated(
                 title: `📒 ${book.name}`,
                 body: `${transaction.recorder} 新增了${typeText} ${amountText}｜${detail}`,
             },
+            // Web 推播由瀏覽器自動顯示 notification（SW 不再手動顯示，避免重複），
+            // 在此提供顯示外觀（icon）
+            webpush: {
+                notification: {
+                    icon: '/icons/icon-192x192.png',
+                },
+            },
             tokens,
         };
 
