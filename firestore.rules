@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 是否已登入
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // 給定一筆記帳本資料，判斷當前使用者是否為擁有者或共享使用者
+    function canAccessBook(book) {
+      return isSignedIn() && (
+        book.userId == request.auth.uid ||
+        (book.sharedUsers != null && request.auth.token.email in book.sharedUsers)
+      );
+    }
+
+    // 讀取指定 bookId 的記帳本資料（供子集合規則使用）
+    function bookData(bookId) {
+      return get(/databases/$(database)/documents/accountBooks/$(bookId)).data;
+    }
+
+    match /accountBooks/{bookId} {
+      // 擁有者或共享使用者可讀取
+      // 注意：list 查詢（where userId == uid / array-contains email）會逐筆套用此規則，
+      //       因為查詢條件已限定範圍，結果中的每筆文件都會通過驗證
+      allow read: if canAccessBook(resource.data);
+
+      // 只能建立屬於自己的記帳本
+      allow create: if isSignedIn()
+        && request.resource.data.userId == request.auth.uid;
+
+      // 只有擁有者可修改 / 刪除（含共享名單、改名等設定）
+      allow update: if isSignedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn()
+        && resource.data.userId == request.auth.uid;
+
+      // 交易記錄：擁有者或共享使用者皆可讀寫（共享者需要能記帳）
+      match /transactions/{transactionId} {
+        allow read, write: if canAccessBook(bookData(bookId));
+      }
+    }
+
+    match /users/{userId} {
+      // 已登入者可讀取（顯示記錄者暱稱、共享時以 email 查詢使用者）
+      allow read: if isSignedIn();
+      // 只能寫入自己的使用者文件
+      allow write: if isSignedIn() && request.auth.uid == userId;
+    }
+
+    // 其餘路徑一律拒絕
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
