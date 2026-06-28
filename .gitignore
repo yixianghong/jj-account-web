@@ -25,3 +25,6 @@ logs
 !.env.example
 test-results/
 playwright-report/
+
+# 由 nuxt.config build:before hook 自動產生（內含環境變數），不納入版控
+src/client/public/firebase-messaging-sw.js
