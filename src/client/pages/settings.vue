@@ -39,14 +39,90 @@
           </div>
         </form>
       </div>
+
+      <!-- 通知設定 -->
+      <div class="bg-white rounded-lg shadow p-6 mt-6">
+        <h2 class="text-xl font-semibold mb-4">通知設定</h2>
+
+        <p v-if="!notifySupported" class="text-sm text-gray-500 leading-relaxed">
+          此裝置或瀏覽器不支援推播通知。<br>
+          iPhone 請先將網站「加入主畫面」，並從主畫面圖示開啟 App 後再回到此頁設定。
+        </p>
+
+        <template v-else>
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <p class="font-medium text-gray-900">記帳推播通知</p>
+              <p class="text-sm text-gray-500">有新的記帳時，於此裝置接收通知</p>
+            </div>
+            <USwitch
+              :model-value="notifyEnabled"
+              :disabled="notifyLoading || notifyBlocked"
+              @update:model-value="onToggleNotify"
+            />
+          </div>
+          <p v-if="notifyBlocked" class="mt-3 text-sm text-amber-600">
+            通知已被封鎖。請至瀏覽器／系統設定的「通知」中允許此網站後，再重新整理開啟。
+          </p>
+        </template>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 const { user, updateDisplayName } = useAuth();
+const { isSupported, permission, isRegistered, enableNotifications, disableNotifications } = useFcm();
 const displayName = ref(user.value?.displayName || '');
 const isUpdating = ref(false);
+
+// 通知設定狀態
+const notifySupported = ref(false);
+const notifyEnabled = ref(false);
+const notifyLoading = ref(false);
+const notifyBlocked = ref(false);
+
+onMounted(() => {
+  notifySupported.value = isSupported();
+  if (!notifySupported.value) return;
+  notifyBlocked.value = permission() === 'denied';
+  notifyEnabled.value =
+    permission() === 'granted' && !!user.value && isRegistered(user.value.uid);
+});
+
+// 切換通知開關（開啟須由此使用者手勢觸發授權，iOS 才會跳出權限提示）
+const onToggleNotify = async (value: boolean) => {
+  if (!user.value) return;
+  notifyLoading.value = true;
+  try {
+    if (value) {
+      const result = await enableNotifications(user.value.uid);
+      if (result === 'granted') {
+        notifyEnabled.value = true;
+        notifyBlocked.value = false;
+        useToast().add({ title: '已開啟通知', description: '此裝置將接收記帳推播', color: 'success' });
+      } else {
+        notifyEnabled.value = false;
+        notifyBlocked.value = permission() === 'denied';
+        useToast().add({
+          title: '無法開啟通知',
+          description: result === 'unsupported' ? '此裝置不支援推播' : '請允許瀏覽器的通知權限',
+          color: 'error',
+        });
+      }
+    } else {
+      await disableNotifications(user.value.uid);
+      notifyEnabled.value = false;
+      useToast().add({ title: '已關閉通知', description: '此裝置將不再接收推播', color: 'success' });
+    }
+  } catch (error) {
+    console.error('切換通知失敗：', error);
+    notifyEnabled.value = !value;
+    useToast().add({ title: '操作失敗', description: '請稍後再試', color: 'error' });
+  } finally {
+    notifyLoading.value = false;
+  }
+};
 
 // 監聽使用者狀態變化
 watch(() => user.value?.displayName, (newDisplayName) => {
