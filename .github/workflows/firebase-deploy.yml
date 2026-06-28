@@ -1,0 +1,87 @@
+name: Firebase Deploy
+
+# push 到 main 時觸發；也可在 Actions 頁面手動觸發
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 同一時間只跑一條部署，後到的會取消前一條，避免並行部署互相覆蓋
+concurrency:
+  group: firebase-deploy
+  cancel-in-progress: false
+
+jobs:
+  # ── E2E 測試（用 Firebase emulator）───────────────────────────
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Firestore emulator 需要 Java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - run: npm ci
+
+      - name: 安裝 Playwright 瀏覽器
+        run: npx playwright install --with-deps chromium
+
+      - name: 安裝 firebase-tools
+        run: npm install -g firebase-tools
+
+      # emulators:exec 會起 auth/firestore emulator、跑測試、結束後自動關閉
+      # Playwright 的 webServer 會自行啟動 dev:test (port 3011)
+      - name: 執行 E2E 測試
+        run: firebase emulators:exec --project demo-test --only auth,firestore "npm run test:e2e"
+
+      - name: 上傳測試報告（失敗時）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # ── 部署到 Firebase ────────────────────────────────────────
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    # 建置期需要的 Firebase 設定（會被 nuxt.config 的 build:before hook 讀取）
+    env:
+      FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+      FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+      FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+      FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+      FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+      FIREBASE_VAPID_KEY: ${{ secrets.FIREBASE_VAPID_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: 安裝 firebase-tools
+        run: npm install -g firebase-tools
+
+      # 把 service account JSON 寫成檔案，供 firebase CLI 驗證使用
+      - name: 設定 Firebase 憑證
+        run: echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > "$RUNNER_TEMP/sa.json"
+
+      # 沿用既有 deploy.sh：安裝 functions 依賴 → npm run generate → firebase deploy
+      - name: 建置並部署 (hosting + functions + firestore rules)
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/sa.json
+        run: bash deploy.sh
