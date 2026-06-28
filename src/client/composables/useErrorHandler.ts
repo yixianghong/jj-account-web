@@ -25,8 +25,8 @@ const firebaseMessages: Record<string, string> = {
   'already-exists': '資料已存在',
 };
 
-// 將任意錯誤轉換成適合顯示給使用者的訊息
-const resolveMessage = (error: unknown, defaultMessage: string): string => {
+// 將任意錯誤轉換成適合顯示給使用者的訊息（單一來源，供 toast 與內嵌錯誤共用）
+export const resolveMessage = (error: unknown, defaultMessage: string): string => {
   const code = (error as { code?: string } | null)?.code;
   // 1. 已知的 Firebase 錯誤代碼 → 友善中文
   if (code && firebaseMessages[code]) {

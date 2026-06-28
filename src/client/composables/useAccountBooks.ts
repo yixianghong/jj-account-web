@@ -6,25 +6,11 @@ import { useErrorHandler } from '~/composables/useErrorHandler';
 
 export const useAccountBooks = () => {
     const { $firebase } = useNuxtApp();
-    const { user, loading: authLoading } = useAuth();
+    const { user, waitForAuth } = useAuth();
     const { handleError } = useErrorHandler();
     const accountBooks = ref<AccountBook[]>([]);
     let unsubscribeOwned: (() => void) | null = null;
     let unsubscribeShared: (() => void) | null = null;
-
-    // 等待認證狀態初始化完成
-    const waitForAuth = async () => {
-        if (authLoading.value) {
-            await new Promise<void>((resolve) => {
-                const unwatch = watch(authLoading, (newLoading) => {
-                    if (!newLoading) {
-                        unwatch();
-                        resolve();
-                    }
-                });
-            });
-        }
-    };
 
     // 載入記帳本資料並設定即時監聽（不包含交易記錄）
     const loadAccountBooks = async () => {

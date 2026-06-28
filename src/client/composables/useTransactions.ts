@@ -5,27 +5,13 @@ import { useCache } from '~/composables/useCache';
 
 export const useTransactions = (bookId: string) => {
     const { $firebase } = useNuxtApp();
-    const { user, loading: authLoading } = useAuth();
+    const { user, waitForAuth } = useAuth();
     const { handleError } = useErrorHandler();
     const { set: setCache, get: getCache, has: hasCache, removePattern } = useCache();
 
     const transactions = ref<Transaction[]>([]);
     const loading = ref(false);
     let unsubscribe: (() => void) | null = null;
-
-    // 等待認證狀態初始化完成
-    const waitForAuth = async () => {
-        if (authLoading.value) {
-            await new Promise<void>((resolve) => {
-                const unwatch = watch(authLoading, (newLoading) => {
-                    if (!newLoading) {
-                        unwatch();
-                        resolve();
-                    }
-                });
-            });
-        }
-    };
 
     // 檢查記帳本權限
     const checkBookPermission = async () => {

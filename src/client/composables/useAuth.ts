@@ -10,7 +10,7 @@ import {
     updateProfile
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
-import { useErrorHandler } from '~/composables/useErrorHandler'
+import { useErrorHandler, resolveMessage } from '~/composables/useErrorHandler'
 
 // 模組層級的共享狀態（單例）——所有 useAuth() 呼叫共用同一份狀態與同一個監聽器，
 // 避免每次呼叫都註冊新的 onAuthStateChanged 造成記憶體洩漏與重複觸發
@@ -85,7 +85,7 @@ export const useAuth = () => {
             return userCredential.user
         } catch (e) {
             const authError = e as AuthError
-            error.value = authError.message
+            error.value = resolveMessage(authError, '登入失敗')
             handleError(authError, '登入失敗');
             throw authError
         }
@@ -107,7 +107,7 @@ export const useAuth = () => {
             return userCredential.user
         } catch (e) {
             const authError = e as AuthError
-            error.value = authError.message
+            error.value = resolveMessage(authError, 'Google 登入失敗')
             handleError(authError, 'Google 登入失敗');
             throw authError
         }
@@ -128,7 +128,7 @@ export const useAuth = () => {
             return userCredential.user
         } catch (e) {
             const authError = e as AuthError
-            error.value = authError.message
+            error.value = resolveMessage(authError, '註冊失敗')
             handleError(authError, '註冊失敗');
             throw authError
         }
@@ -147,7 +147,7 @@ export const useAuth = () => {
             await signOut(auth)
         } catch (e) {
             const authError = e as AuthError
-            error.value = authError.message
+            error.value = resolveMessage(authError, '登出失敗')
             handleError(authError, '登出失敗');
             throw authError
         }
@@ -185,6 +185,21 @@ export const useAuth = () => {
         }
     };
 
+    // 等待認證狀態初始化完成（loading 由 true 轉為 false）
+    // 供需要在操作前確認登入狀態的 composable 共用，避免各自重複實作
+    const waitForAuth = async () => {
+        if (loading.value) {
+            await new Promise<void>((resolve) => {
+                const unwatch = watch(loading, (newLoading) => {
+                    if (!newLoading) {
+                        unwatch()
+                        resolve()
+                    }
+                })
+            })
+        }
+    }
+
     return {
         user,
         loading,
@@ -193,6 +208,7 @@ export const useAuth = () => {
         loginWithGoogle,
         register,
         logout,
-        updateDisplayName
+        updateDisplayName,
+        waitForAuth
     }
-} 
+}
