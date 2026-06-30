@@ -62,7 +62,7 @@
       </div>
 
       <!-- Chart.js 折線圖表 -->
-      <UCard class="bg-white rounded-2xl shadow p-2 mb-6">
+      <UCard class="bg-white dark:bg-gray-900 rounded-2xl shadow p-2 mb-6">
         <h3 class="text-lg font-semibold mb-3">近一年收支趨勢</h3>
         <div class="h-64">
           <Line
@@ -74,7 +74,7 @@
       </UCard>
 
       <!-- 年度分類統計 - 圓餅圖 -->
-      <UCard class="bg-white rounded-2xl shadow p-2 mb-6">
+      <UCard class="bg-white dark:bg-gray-900 rounded-2xl shadow p-2 mb-6">
         <h3 class="text-lg font-semibold mb-3">年度分類支出</h3>
         <div v-if="Object.keys(yearlySummary.categorySummary).length === 0" class="text-gray-400 text-center py-8">今年尚無支出</div>
         <div v-else class="grid grid-cols-1 gap-6">
@@ -91,7 +91,7 @@
             <div
               v-for="(amount, category) in yearlySummary.categorySummary"
               :key="category"
-              class="flex justify-between items-center border-b last:border-b-0 py-2"
+              class="flex justify-between items-center border-b border-gray-100 dark:border-gray-800 last:border-b-0 py-2"
             >
               <span class="font-medium">{{ category }}</span>
               <span class="font-bold text-error-600">${{ amount?.toLocaleString() }}</span>

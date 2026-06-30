@@ -1,93 +1,69 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-    <UCard v-if="!loading" class="max-w-md w-full">
-      <template #header>
-        <h2 class="text-center text-3xl font-extrabold text-gray-900">
-          {{ isLogin ? '登入帳號' : '註冊帳號' }}
-        </h2>
-      </template>
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-50 via-gray-50 to-white dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 py-12 px-4">
+    <div v-if="!loading" class="w-full max-w-sm">
+      <!-- 品牌區 -->
+      <div class="flex flex-col items-center mb-8">
+        <img src="@/assets/imgs/icon.png" alt="記帳夥伴" class="w-16 h-16 rounded-2xl shadow-lg mb-3">
+        <h1 class="text-2xl font-extrabold tracking-tight text-primary-700 dark:text-primary-400">記帳夥伴</h1>
+        <p class="text-sm text-gray-400 mt-1">和夥伴一起，輕鬆記帳對帳</p>
+      </div>
 
-      <form class="space-y-6" @submit.prevent="handleSubmit">
-        <UFormField label="電子郵件">
-          <UInput
-            v-model="email"
-            type="email"
-            placeholder="請輸入電子郵件"
-            required
-            class="w-full"
+      <div class="rounded-3xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 shadow-xl shadow-gray-200/50 dark:shadow-none p-6">
+        <h2 class="text-lg font-bold mb-5">{{ isLogin ? '登入帳號' : '建立新帳號' }}</h2>
+
+        <form class="space-y-4" @submit.prevent="handleSubmit">
+          <UFormField label="電子郵件">
+            <UInput v-model="email" type="email" placeholder="請輸入電子郵件" required class="w-full" />
+          </UFormField>
+
+          <UFormField label="密碼">
+            <UInput v-model="password" type="password" placeholder="請輸入密碼" required class="w-full" />
+          </UFormField>
+
+          <UAlert
+            v-if="error"
+            data-testid="login-error"
+            color="error"
+            variant="soft"
+            :title="error"
           />
-        </UFormField>
 
-        <UFormField label="密碼">
-          <UInput
-            v-model="password"
-            type="password"
-            placeholder="請輸入密碼"
-            required
-            class="w-full"
-          />
-        </UFormField>
-
-        <UAlert
-          v-if="error"
-          data-testid="login-error"
-          color="error"
-          variant="soft"
-          :title="error"
-        />
-
-        <div class="space-y-4">
-          <UButton
-            type="submit"
-            color="primary"
-            block
-            :loading="loading"
-          >
+          <UButton type="submit" color="primary" block size="lg" :loading="loading">
             {{ isLogin ? '登入' : '註冊' }}
           </UButton>
 
-          <div class="relative">
+          <div class="relative py-1">
             <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-gray-300"/>
+              <div class="w-full border-t border-gray-200 dark:border-gray-800" />
             </div>
-            <div class="relative flex justify-center text-sm">
-              <span class="px-2 bg-gray-50 text-gray-500">或</span>
+            <div class="relative flex justify-center text-xs">
+              <span class="px-2 bg-white dark:bg-gray-900 text-gray-400">或</span>
             </div>
           </div>
 
-          <UButton
-            color="neutral"
-            variant="outline"
-            block
-            :loading="loading"
-            @click="handleGoogleLogin"
-          >
+          <UButton color="neutral" variant="outline" block size="lg" :loading="loading" @click="handleGoogleLogin">
             <template #leading>
-              <img
-                class="h-5 w-5"
-                src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                alt="Google logo"
-              >
+              <img class="h-5 w-5" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo">
             </template>
             使用 Google 登入
           </UButton>
-        </div>
+        </form>
+      </div>
 
-        <div class="text-center">
-          <UButton
-            color="neutral"
-            variant="link"
-            @click="isLogin = !isLogin"
-          >
-            {{ isLogin ? '還沒有帳號？點此註冊' : '已有帳號？點此登入' }}
-          </UButton>
-        </div>
-      </form>
-    </UCard>
+      <div class="text-center mt-5">
+        <button
+          type="button"
+          class="text-sm text-gray-500 hover:text-primary-600 transition-colors"
+          @click="isLogin = !isLogin"
+        >
+          {{ isLogin ? '還沒有帳號？點此註冊' : '已有帳號？點此登入' }}
+        </button>
+      </div>
+    </div>
 
     <div v-else class="text-center">
       <UIcon name="i-heroicons-arrow-path" class="w-8 h-8 animate-spin text-primary-600" />
-      <p class="mt-2 text-gray-600">載入中...</p>
+      <p class="mt-2 text-gray-500">載入中...</p>
     </div>
   </div>
 </template>

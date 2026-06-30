@@ -4,7 +4,7 @@
       <h3 class="text-xl font-semibold">{{ options.title || '確認' }}</h3>
     </template>
     <template #body>
-      <p class="whitespace-pre-line text-gray-700">{{ options.message }}</p>
+      <p class="whitespace-pre-line text-gray-700 dark:text-gray-300">{{ options.message }}</p>
     </template>
     <template #footer>
       <div class="flex justify-end gap-4">

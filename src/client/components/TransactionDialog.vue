@@ -1,15 +1,13 @@
 <template>
-  <UModal v-model:open="isOpen" :title="mode === 'add' ? '新增記帳' : '編輯記帳'">
-    <template #body>
-      <TransactionForm
-        v-if="book"
-        :book="book"
-        :initial-data="initialData"
-        :submit-button-text="mode === 'add' ? '新增記帳' : '儲存變更'"
-        @submit="handleSubmit"
-      />
-    </template>
-  </UModal>
+  <BottomSheet v-model="isOpen" :title="mode === 'add' ? '新增記帳' : '編輯記帳'">
+    <TransactionForm
+      v-if="book"
+      :book="book"
+      :initial-data="initialData"
+      :submit-button-text="mode === 'add' ? '新增記帳' : '儲存變更'"
+      @submit="handleSubmit"
+    />
+  </BottomSheet>
 </template>
 
 <script setup lang="ts">
@@ -36,4 +34,4 @@ const handleSubmit = (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updat
   emit('submit', transaction);
   isOpen.value = false;
 };
-</script> 
+</script>

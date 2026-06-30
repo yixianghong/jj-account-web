@@ -3,21 +3,21 @@
     <div class="max-w-2xl mx-auto">
       <h1 class="text-3xl font-bold mb-8">使用者設定</h1>
       
-      <div class="bg-white rounded-lg shadow p-6">
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm p-6">
         <h2 class="text-xl font-semibold mb-4">個人資料</h2>
-        
+
         <div class="mb-6">
-          <label class="block text-sm font-medium text-gray-700 mb-1">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             電子郵件
           </label>
-          <div class="text-gray-900">
+          <div class="text-gray-900 dark:text-gray-100">
             {{ user?.email }}
           </div>
         </div>
 
         <form class="space-y-4" @submit.prevent="handleUpdateDisplayName">
           <div>
-            <label for="displayName" class="block text-sm font-medium text-gray-700 mb-1">
+            <label for="displayName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               暱稱
             </label>
             <UInput
@@ -41,7 +41,7 @@
       </div>
 
       <!-- 通知設定 -->
-      <div class="bg-white rounded-lg shadow p-6 mt-6">
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm p-6 mt-6">
         <h2 class="text-xl font-semibold mb-4">通知設定</h2>
 
         <p v-if="!notifySupported" class="text-sm text-gray-500 leading-relaxed">
@@ -52,7 +52,7 @@
         <template v-else>
           <div class="flex items-center justify-between gap-4">
             <div>
-              <p class="font-medium text-gray-900">記帳推播通知</p>
+              <p class="font-medium text-gray-900 dark:text-gray-100">記帳推播通知</p>
               <p class="text-sm text-gray-500">有新的記帳時，於此裝置接收通知</p>
             </div>
             <USwitch

@@ -1,157 +1,119 @@
 <template>
-  <div class="mobile-form-container">
-    <form class="space-y-6" @submit.prevent="handleSubmit">
-      <!-- 類型選擇 - 大按鈕設計 -->
-      <div class="type-selector">
-        <UFormField label="類型" class="mb-3">
-          <div class="flex gap-3">
-            <UButton
-              :variant="form.type === 'expense' ? 'solid' : 'outline'"
-              :color="form.type === 'expense' ? 'error' : 'neutral'"
-              class="flex-1  text-base font-medium"
-              @click="form.type = 'expense'"
-            >
-              <UIcon name="i-heroicons-arrow-trending-down" class="mr-2" />
-              支出
-            </UButton>
-            <UButton
-              :variant="form.type === 'income' ? 'solid' : 'outline'"
-              :color="form.type === 'income' ? 'success' : 'neutral'"
-              class="flex-1  text-base font-medium"
-              @click="form.type = 'income'"
-            >
-              <UIcon name="i-heroicons-arrow-trending-up" class="mr-2" />
-              收入
-            </UButton>
-          </div>
-        </UFormField>
-      </div>
+  <form class="space-y-5 pb-2" @submit.prevent="handleSubmit">
+    <!-- 類型切換 -->
+    <div class="flex p-1 rounded-2xl bg-gray-100 dark:bg-gray-800">
+      <button
+        type="button"
+        class="flex-1 py-2 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5"
+        :class="form.type === 'expense' ? 'bg-white dark:bg-gray-900 shadow-sm text-rose-600' : 'text-gray-500'"
+        @click="form.type = 'expense'"
+      >
+        <UIcon name="i-heroicons-arrow-trending-down" /> 支出
+      </button>
+      <button
+        type="button"
+        class="flex-1 py-2 text-sm font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5"
+        :class="form.type === 'income' ? 'bg-white dark:bg-gray-900 shadow-sm text-emerald-600' : 'text-gray-500'"
+        @click="form.type = 'income'"
+      >
+        <UIcon name="i-heroicons-arrow-trending-up" /> 收入
+      </button>
+    </div>
 
-      <!-- 分類選擇 - 網格佈局 -->
-      <div class="category-selector">
-        <UFormField label="分類" class="mb-3">
-          <div class="grid grid-cols-3 gap-3">
-            <UButton
-              v-for="category in filteredCategories"
-              :key="category"
-              :variant="form.category === category ? 'solid' : 'outline'"
-              :color="form.category === category ? 'primary' : 'neutral'"
-              class=" text-sm font-medium"
-              @click="form.category = category"
-            >
-              {{ categoryIcons[category] }} {{ category }}
-            </UButton>
-          </div>
-        </UFormField>
-      </div>
+    <!-- 金額（主視覺） -->
+    <div class="flex items-center justify-center gap-1 py-2">
+      <span class="text-3xl font-bold" :class="form.type === 'income' ? 'text-emerald-500' : 'text-rose-500'">$</span>
+      <input
+        v-model.number="form.amount"
+        type="number"
+        inputmode="decimal"
+        step="1"
+        min="0"
+        required
+        placeholder="0"
+        class="w-44 bg-transparent text-center text-5xl font-extrabold tabular-nums outline-none placeholder:text-gray-300"
+        :class="form.type === 'income' ? 'text-emerald-600' : 'text-rose-600'"
+      >
+    </div>
 
-      <!-- 金額和描述輸入 - 同一行 -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="amount-input">
-          <UFormField label="金額">
-            <div class="relative">
-              <UInput
-                v-model.number="form.amount"
-                class="w-full text-3xl font-bold text-center"
-                type="number"
-                inputmode="decimal"
-                step="1"
-                min="0"
-                required
-                placeholder="0"
-              />
-            </div>
-          </UFormField>
-        </div>
-        <div class="description-input">
-          <UFormField label="描述">
-            <UInput
-              v-model="form.description"
-              type="text"
-              required
-              class="w-full text-base"
-              placeholder="請輸入描述"
-            />
-          </UFormField>
-        </div>
-      </div>
-
-      <!-- 日期和請款狀態 -->
-      <div class="grid grid-cols-2 gap-4">
-        <div>
-          <UFormField label="日期" class="mb-3">
-            <UInput
-              v-model="form.date"
-              type="date"
-              required
-              class="w-full  text-base"
-            />
-          </UFormField>
-        </div>
-        <div>
-          <UFormField label="請款狀態" class="mb-3">
-            <div class="flex gap-3">
-              <UButton
-                :variant="form.paymentStatus === 'pending' ? 'solid' : 'outline'"
-                :color="form.paymentStatus === 'pending' ? 'warning' : 'neutral'"
-                class="flex-1  text-sm font-medium"
-                :disabled="form.type === 'income'"
-                @click="form.paymentStatus = 'pending'"
-              >
-                未請款
-              </UButton>
-              <UButton
-                :variant="form.paymentStatus === 'paid' ? 'solid' : 'outline'"
-                :color="form.paymentStatus === 'paid' ? 'success' : 'neutral'"
-                class="flex-1  text-sm font-medium"
-                :disabled="form.type === 'income'"
-                @click="form.paymentStatus = 'paid'"
-              >
-                已請款
-              </UButton>
-            </div>
-          </UFormField>
-        </div>
-      </div>
-
-      <!-- 付款人選擇 -->
-      <div class="recorder-selector">
-        <UFormField label="付款人" class="mb-3">
-          <div class="flex gap-3">
-            <button
-              v-for="option in recorderOptions"
-              :key="option.value"
-              type="button"
-              class="recorder-avatar"
-              :class="{
-                'recorder-avatar--selected': form.recorder === option.value,
-                'recorder-avatar--unselected': form.recorder !== option.value
-              }"
-              :title="option.label"
-              @click="form.recorder = option.value"
-            >
-              <span class="recorder-avatar__text">
-                {{ option.label.charAt(0) }}
-              </span>
-            </button>
-          </div>
-        </UFormField>
-      </div>
-
-      <!-- 提交按鈕 - 固定在底部 -->
-      <div class="submit-section">
-        <UButton
-          type="submit"
-          color="primary"
-          size="lg"
-          class="w-full h-14 text-lg font-semibold"
+    <!-- 分類 -->
+    <div>
+      <p class="text-xs font-medium text-gray-400 mb-2">分類</p>
+      <div class="flex flex-wrap gap-2">
+        <button
+          v-for="category in filteredCategories"
+          :key="category"
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium border transition-all"
+          :class="form.category === category
+            ? 'bg-primary-500 border-primary-500 text-white shadow-sm'
+            : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-primary-300'"
+          @click="form.category = category"
         >
-          <UIcon name="i-heroicons-check" class="mr-2" />
-          {{ submitButtonText || '新增記帳' }}
-        </UButton>
+          <span>{{ categoryIcons[category] }}</span>{{ category }}
+        </button>
       </div>
-    </form>
-  </div>
+    </div>
+
+    <!-- 描述 -->
+    <UFormField label="描述">
+      <UInput v-model="form.description" type="text" required placeholder="這筆是什麼？" class="w-full" />
+    </UFormField>
+
+    <!-- 日期 + 請款狀態 -->
+    <div class="grid grid-cols-2 gap-3">
+      <UFormField label="日期">
+        <UInput v-model="form.date" type="date" required class="w-full" />
+      </UFormField>
+      <UFormField label="請款狀態">
+        <div class="flex p-1 rounded-xl bg-gray-100 dark:bg-gray-800" :class="form.type === 'income' && 'opacity-50 pointer-events-none'">
+          <button
+            type="button"
+            class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-all"
+            :class="form.paymentStatus === 'pending' ? 'bg-white dark:bg-gray-900 shadow-sm text-amber-600' : 'text-gray-500'"
+            @click="form.paymentStatus = 'pending'"
+          >未請款</button>
+          <button
+            type="button"
+            class="flex-1 py-1.5 text-xs font-medium rounded-lg transition-all"
+            :class="form.paymentStatus === 'paid' ? 'bg-white dark:bg-gray-900 shadow-sm text-emerald-600' : 'text-gray-500'"
+            @click="form.paymentStatus = 'paid'"
+          >已請款</button>
+        </div>
+      </UFormField>
+    </div>
+
+    <!-- 付款人 -->
+    <div>
+      <p class="text-xs font-medium text-gray-400 mb-2">付款人</p>
+      <div class="flex gap-2">
+        <button
+          v-for="option in recorderOptions"
+          :key="option.value"
+          type="button"
+          class="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full border transition-all"
+          :class="form.recorder === option.value
+            ? 'bg-primary-50 dark:bg-primary-900/20 border-primary-400'
+            : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700'"
+          :title="option.label"
+          @click="form.recorder = option.value"
+        >
+          <span
+            class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold"
+            :class="form.recorder === option.value ? 'bg-primary-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'"
+          >{{ option.label.charAt(0).toUpperCase() }}</span>
+          <span class="text-sm font-medium" :class="form.recorder === option.value ? 'text-primary-700 dark:text-primary-300' : 'text-gray-600 dark:text-gray-300'">{{ option.label }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 提交 -->
+    <div class="sticky bottom-0 bg-white dark:bg-gray-900 pt-2">
+      <UButton type="submit" color="primary" size="lg" block class="h-12 text-base font-semibold rounded-2xl">
+        {{ submitButtonText || '新增記帳' }}
+      </UButton>
+    </div>
+  </form>
 </template>
 
 <script setup lang="ts">
@@ -164,6 +126,7 @@ import type {
   AccountBook,
 } from "~/types/accounting";
 import { CATEGORIES } from "~/types/accounting";
+import { categoryIcons } from "~/utils/category";
 import { useAuth } from "~/composables/useAuth";
 import { useUsers } from '~/composables/useUsers'
 
@@ -185,31 +148,12 @@ const { getUserInfo } = useUsers();
 
 const recorderOptions = ref<{ label: string; value: string; }[]>([]);
 
-// 分類圖標映射
-const categoryIcons: Record<Category, string> = {
-  '存款': '💰',
-  '上期結餘': '📊',
-  '飲食': '🍽️',
-  '購物': '🛒',
-  '生活': '🏠',
-  '旅遊': '✈️',
-  '醫療': '🏥',
-  '交通': '🚗',
-  '房屋': '🏡',
-  '電費': '⚡',
-  '水費': '💧',
-  '瓦斯費': '🔥',
-  '網路費': '📡',
-  '管理費': '🏢',
-  '其他': '📝'
-};
-
 // 根據類型過濾分類選項
 const filteredCategories = computed(() => {
   if (form.value.type === 'income') {
     return ['存款', '上期結餘', '其他'] as Category[];
   } else {
-    return CATEGORIES.filter(category => 
+    return CATEGORIES.filter(category =>
       category !== '存款' && category !== '上期結餘'
     );
   }
@@ -224,10 +168,10 @@ watch(() => props.book, async (newBook) => {
 
   // 取得帳本擁有者
   const owner = newBook.userId;
-  
+
   // 取得共享使用者列表，並過濾掉擁有者
   const sharedUsers = (newBook.sharedUsers || []).filter(email => email !== owner);
-  
+
   // 合併使用者列表
   const allUsers = [owner, ...sharedUsers];
 
@@ -289,7 +233,7 @@ watch(
 
 const handleSubmit = async () => {
   emit("submit", { ...form.value });
-  
+
   // 重置表單，保持當前的記帳人
   const currentRecorder = form.value.recorder;
   form.value = {
@@ -303,145 +247,3 @@ const handleSubmit = async () => {
   };
 };
 </script>
-
-<style scoped>
-.mobile-form-container {
-  max-width: 100%;
-  padding: 1rem;
-  background: white;
-  min-height: 100vh;
-}
-
-.form-header {
-  padding: 1rem 0;
-  border-bottom: 1px solid #e5e7eb;
-  margin-bottom: 1.5rem;
-}
-
-.type-selector {
-  margin-bottom: 1.5rem;
-}
-
-.category-selector {
-  margin-bottom: 1.5rem;
-}
-
-.recorder-selector {
-  margin-bottom: 1.5rem;
-}
-
-.submit-section {
-  position: sticky;
-  bottom: 0;
-  background: white;
-  padding: 1rem 0;
-  border-top: 1px solid #e5e7eb;
-  margin-top: 2rem;
-}
-
-/* 響應式設計 */
-@media (max-width: 640px) {
-  .mobile-form-container {
-    padding: 0.5rem;
-  }
-  
-  .form-header {
-    padding: 0.5rem 0;
-  }
-  
-  .submit-section {
-    padding: 0.5rem 0;
-  }
-}
-
-/* 付款人頭貼樣式 */
-.recorder-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  border: 3px solid transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-weight: 600;
-  font-size: 12px;
-  position: relative;
-}
-
-.recorder-avatar--selected {
-  background-color: rgb(16 185 129);
-  color: white;
-  border-color: rgb(16 185 129);
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-}
-
-.recorder-avatar--unselected {
-  background-color: rgb(243 244 246);
-  color: rgb(107 114 128);
-  border-color: rgb(229 231 235);
-}
-
-.recorder-avatar--unselected:hover {
-  background-color: rgb(229 231 235);
-  border-color: rgb(156 163 175);
-  transform: scale(1.02);
-}
-
-.recorder-avatar__text {
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1;
-}
-
-/* 自定義 tooltip 樣式 */
-.recorder-avatar {
-  position: relative;
-}
-
-.recorder-avatar:hover::after {
-  content: attr(title);
-  position: absolute;
-  bottom: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  background-color: rgb(17 24 39);
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
-  z-index: 1000;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.recorder-avatar:hover::before {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 4px solid transparent;
-  border-top-color: rgb(17 24 39);
-  z-index: 1000;
-}
-
-/* 觸控優化 */
-@media (hover: none) and (pointer: coarse) {
-  .u-button {
-    min-height: 44px;
-  }
-  
-  .u-input {
-    min-height: 44px;
-  }
-  
-  .recorder-avatar {
-    min-width: 40px;
-    min-height: 40px;
-  }
-}
-</style>

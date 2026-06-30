@@ -63,6 +63,14 @@
   --bg-secondary: white;
 }
 
+/* 深色模式：翻轉自訂變數（開關以 .dark class 切換，由 @nuxt/ui + color-mode 提供） */
+.dark {
+  --text-primary: var(--color-neutral-50);
+  --text-secondary: var(--color-neutral-300);
+  --bg-primary: var(--color-neutral-950);
+  --bg-secondary: var(--color-neutral-900);
+}
+
 /* 全域過渡效果 */
 .page-enter-active,
 .page-leave-active {
@@ -204,32 +212,13 @@ h3 {
   color: var(--color-neutral-500);
 }
 
-/* 元件樣式 */
-.transaction-form {
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius-xl);
-  padding: 16px;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.transaction-list {
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius-xl);
-  padding: 16px;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-}
-
-.monthly-summary, .yearly-analysis {
-  background-color: var(--bg-secondary);
-  border-radius: var(--radius-xl);
-  padding: 16px;
-  box-shadow: var(--shadow-lg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+/* 元件容器：改為透明，外觀由各元件自己的卡片控制（支援深色模式） */
+.transaction-form,
+.transaction-list,
+.yearly-analysis {
+  background-color: transparent;
+  box-shadow: none;
+  padding: 0;
 }
 
 /* 間距樣式 */
@@ -263,13 +252,6 @@ h3 {
 
 /* 響應式設計 */
 @media (max-width: 640px) {
-  .transaction-form,
-  .transaction-list,
-  .monthly-summary {
-    padding: 1rem;
-    border-radius: var(--radius-lg);
-  }
-
   h1 {
     font-size: 1.5rem;
   }
