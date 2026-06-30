@@ -80,7 +80,7 @@ firebase.messaging();
       title: '記帳夥伴',
       meta: [
         { name: 'description', content: '記帳,共享,分析' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' }
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }
       ],
       link: [
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }

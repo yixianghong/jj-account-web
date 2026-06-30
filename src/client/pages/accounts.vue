@@ -1,5 +1,5 @@
 <template>
-  <div class="container mx-auto max-w-3xl px-4 py-6 pb-28">
+  <div class="mx-auto w-full max-w-3xl px-4 sm:px-6 py-6 pb-28">
     <!-- 標題列 -->
     <div class="flex items-end justify-between mb-6">
       <div>
@@ -15,7 +15,7 @@
     </div>
 
     <!-- 記帳本列表 -->
-    <div v-if="accountBooks.length > 0" class="grid gap-3 sm:grid-cols-2">
+    <div v-if="accountBooks.length > 0" class="grid gap-3 sm:gap-4 sm:grid-cols-2">
       <div
         v-for="book in accountBooks"
         :key="book.id"
@@ -31,7 +31,8 @@
               size="sm"
               color="neutral"
               variant="ghost"
-              class="opacity-0 group-hover:opacity-100 transition-opacity"
+              class="rounded-full opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+              aria-label="記帳本操作"
               @click.stop
             />
           </UDropdownMenu>
@@ -75,7 +76,9 @@
 
     <!-- 空狀態 -->
     <div v-else class="flex flex-col items-center justify-center py-20 text-center">
-      <div class="w-20 h-20 rounded-3xl bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center text-4xl mb-4">📒</div>
+      <div class="w-20 h-20 rounded-3xl bg-primary-50 text-primary-500 dark:bg-primary-500/15 dark:text-primary-400 flex items-center justify-center mb-4">
+        <UIcon name="i-lucide-notebook-tabs" class="w-10 h-10" />
+      </div>
       <h2 class="text-lg font-bold">還沒有記帳本</h2>
       <p class="text-sm text-gray-400 mt-1 mb-5">建立第一本記帳本,開始和夥伴一起記帳</p>
       <UButton color="primary" icon="i-heroicons-plus" size="lg" class="rounded-full" @click="openCreateDialog">
@@ -87,7 +90,8 @@
     <UButton
       color="primary"
       icon="i-heroicons-plus"
-      class="fixed bottom-6 right-6 z-50 rounded-full w-14 h-14 flex items-center justify-center shadow-xl shadow-primary-500/30 text-2xl sm:hidden"
+      class="fixed right-5 z-50 rounded-full w-14 h-14 flex items-center justify-center shadow-xl shadow-primary-500/30 text-2xl transition-transform active:scale-95 sm:hidden"
+      style="bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem))"
       aria-label="新增記帳本"
       @click="openCreateDialog"
     />
@@ -197,7 +201,7 @@ const sharedUsersOfSelected = computed(() => {
 
 // 帳本顏色（根據 id hash 產生顏色）
 function getBookColor(id: string) {
-  const colors = ['#4F8A8B', '#F08A5D', '#B83B5E', '#6A2C70', '#3B6978', '#10b981'];
+  const colors = ['#0ea982', '#3b82f6', '#f59e0b', '#e11d48', '#8b5cf6', '#06b6d4'];
   let hash = 0;
   for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
   return colors[Math.abs(hash) % colors.length];

@@ -1,5 +1,6 @@
 <template>
-  <nav class="sticky top-0 left-0 right-0 z-50 px-4 py-2 flex items-center justify-between bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-gray-800">
+  <nav class="sticky top-0 left-0 right-0 z-50 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-sm border-b border-gray-100 dark:border-gray-800" style="padding-top: env(safe-area-inset-top)">
+    <div class="mx-auto w-full max-w-3xl h-14 px-4 sm:px-6 flex items-center justify-between">
     <!-- LOGO/APP名稱 -->
     <div class="flex items-center gap-2 cursor-pointer" @click="router.push('/accounts')">
       <img src="@/assets/imgs/icon.png" alt="Logo" class="w-8 h-8 rounded-lg" >
@@ -37,6 +38,7 @@
       <template v-else>
         <UButton color="primary" to="/">登入</UButton>
       </template>
+    </div>
     </div>
   </nav>
 </template>

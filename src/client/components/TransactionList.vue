@@ -12,30 +12,37 @@
           </span>
         </div>
 
-        <div class="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 divide-y divide-gray-50 dark:divide-gray-800/60 overflow-hidden">
+        <div class="rounded-2xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 divide-y divide-gray-50 dark:divide-gray-800/60 overflow-hidden shadow-sm">
           <div
             v-for="transaction in group.items"
             :key="transaction.id"
-            class="flex items-center gap-3 px-3 py-3 hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors group"
+            role="button"
+            tabindex="0"
+            class="flex items-center gap-3 px-3 py-3 cursor-pointer transition-colors group hover:bg-gray-50 dark:hover:bg-gray-800/40 active:bg-gray-100 dark:active:bg-gray-800/70"
+            @click="handleEdit(transaction)"
+            @keydown.enter="handleEdit(transaction)"
           >
             <!-- 分類圖標 -->
             <div
-              class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-lg"
+              class="w-10 h-10 shrink-0 rounded-xl flex items-center justify-center"
               :class="getCategoryColor(transaction.category)"
-            >{{ getCategoryIcon(transaction.category) }}</div>
+            >
+              <UIcon :name="getCategoryIcon(transaction.category)" class="w-5 h-5" />
+            </div>
 
             <!-- 內容 -->
             <div class="flex-1 min-w-0">
               <div class="flex items-center gap-2">
-                <span class="font-medium truncate">{{ transaction.category }}</span>
+                <span class="font-semibold truncate">{{ transaction.category }}</span>
                 <button
                   v-if="transaction.type === 'expense'"
                   type="button"
                   class="inline-flex items-center gap-1 text-[11px] font-medium px-1.5 py-0.5 rounded-full transition-colors"
                   :class="transaction.paymentStatus === 'paid'
-                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20'
-                    : 'bg-amber-50 text-amber-600 dark:bg-amber-900/20'"
-                  @click="togglePaymentStatus(transaction)"
+                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400'
+                    : 'bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400'"
+                  :aria-label="transaction.paymentStatus === 'paid' ? '標記為未請款' : '標記為已請款'"
+                  @click.stop="togglePaymentStatus(transaction)"
                 >
                   <span class="w-1.5 h-1.5 rounded-full" :class="transaction.paymentStatus === 'paid' ? 'bg-emerald-500' : 'bg-amber-500'" />
                   {{ transaction.paymentStatus === 'paid' ? '已請款' : '未請款' }}
@@ -47,19 +54,20 @@
 
             <!-- 金額 -->
             <div class="text-right shrink-0">
-              <div class="font-bold tabular-nums" :class="transaction.type === 'income' ? 'text-emerald-600' : 'text-gray-800 dark:text-gray-100'">
+              <div class="font-bold tabular-nums" :class="transaction.type === 'income' ? 'text-emerald-600 dark:text-emerald-400' : 'text-gray-800 dark:text-gray-100'">
                 {{ transaction.type === 'income' ? '+' : '-' }}${{ transaction.amount.toLocaleString() }}
               </div>
             </div>
 
-            <!-- 操作 -->
+            <!-- 操作（觸控裝置常駐顯示、桌面 hover 顯示）-->
             <UDropdownMenu :items="getTransactionActions(transaction)" :popper="{ placement: 'bottom-end' }" class="!p-0">
               <UButton
                 icon="i-heroicons-ellipsis-vertical"
                 size="sm"
                 color="neutral"
                 variant="ghost"
-                class="opacity-0 group-hover:opacity-100 transition-opacity"
+                class="rounded-full opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                aria-label="更多操作"
                 @click.stop
               />
             </UDropdownMenu>
@@ -70,8 +78,10 @@
 
     <!-- 空狀態 -->
     <div v-else class="flex flex-col items-center justify-center py-16 text-center">
-      <div class="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center text-3xl mb-3">🧾</div>
-      <p class="text-gray-500 font-medium">本月還沒有記帳</p>
+      <div class="w-16 h-16 rounded-2xl bg-primary-50 text-primary-500 dark:bg-primary-500/15 dark:text-primary-400 flex items-center justify-center mb-3">
+        <UIcon name="i-lucide-receipt-text" class="w-8 h-8" />
+      </div>
+      <p class="text-gray-600 dark:text-gray-300 font-semibold">本月還沒有記帳</p>
       <p class="text-sm text-gray-400 mt-1">點右下角的 ＋ 開始記帳</p>
     </div>
   </div>

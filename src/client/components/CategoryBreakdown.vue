@@ -1,15 +1,17 @@
 <template>
-  <div class="rounded-3xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5">
-    <h3 class="text-base font-bold mb-4">分類支出</h3>
+  <div class="rounded-3xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
+    <h3 class="text-base font-bold mb-4 flex items-center gap-2">
+      <UIcon name="i-lucide-chart-bar" class="w-4 h-4 text-primary-500" />分類支出
+    </h3>
 
     <div v-if="rows.length" class="space-y-3">
       <div v-for="row in rows" :key="row.category">
         <div class="flex items-center justify-between mb-1.5">
           <div class="flex items-center gap-2 min-w-0">
             <span
-              class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center text-sm"
+              class="w-7 h-7 shrink-0 rounded-lg flex items-center justify-center"
               :class="getCategoryColor(row.category)"
-            >{{ getCategoryIcon(row.category) }}</span>
+            ><UIcon :name="getCategoryIcon(row.category)" class="w-4 h-4" /></span>
             <span class="text-sm font-medium truncate">{{ row.category }}</span>
             <span class="text-xs text-gray-400">{{ row.percent }}%</span>
           </div>

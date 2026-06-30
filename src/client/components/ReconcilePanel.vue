@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-4">
     <!-- 財務核對 -->
-    <div class="rounded-3xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5">
+    <div class="rounded-3xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
       <h3 class="text-base font-bold mb-4 flex items-center gap-2">
-        💵 財務核對
+        <UIcon name="i-lucide-scale" class="w-4 h-4 text-primary-500" />財務核對
         <UBadge v-if="summary.totalPendingAmount > 0" color="primary" variant="subtle" size="xs">含未請款</UBadge>
       </h3>
 
@@ -21,14 +21,16 @@
           <span class="text-2xl font-extrabold text-emerald-600 tabular-nums">${{ summary.expectedBalance.toLocaleString() }}</span>
         </div>
       </div>
-      <p class="text-xs text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl px-3 py-2 mt-3">
-        💡 此金額為請款後應有的總額，可用於對帳
+      <p class="flex items-start gap-1.5 text-xs text-gray-400 bg-gray-50 dark:bg-gray-800/50 rounded-xl px-3 py-2 mt-3">
+        <UIcon name="i-lucide-info" class="w-3.5 h-3.5 shrink-0 mt-0.5" />此金額為請款後應有的總額，可用於對帳
       </p>
     </div>
 
     <!-- 未請款（依付款人） -->
-    <div class="rounded-3xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5">
-      <h3 class="text-base font-bold mb-4">未請款</h3>
+    <div class="rounded-3xl bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 p-5 shadow-sm">
+      <h3 class="text-base font-bold mb-4 flex items-center gap-2">
+        <UIcon name="i-lucide-hand-coins" class="w-4 h-4 text-amber-500" />未請款
+      </h3>
       <div v-if="pendingRows.length" class="space-y-2">
         <div
           v-for="row in pendingRows"
@@ -47,7 +49,9 @@
           <UButton color="warning" variant="soft" size="sm" @click="handleClaimAll(row.recorder)">一鍵請款</UButton>
         </div>
       </div>
-      <div v-else class="text-center text-gray-400 py-6 text-sm">本月無未請款金額 🎉</div>
+      <div v-else class="flex flex-col items-center justify-center text-gray-400 py-6 text-sm gap-1.5">
+        <UIcon name="i-lucide-party-popper" class="w-6 h-6 text-emerald-500" />本月無未請款金額
+      </div>
     </div>
   </div>
 </template>

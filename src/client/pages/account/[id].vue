@@ -1,7 +1,7 @@
 <template>
-  <div class="container mx-auto max-w-2xl px-3 py-4 sm:px-4 sm:py-6 pb-28">
+  <div class="mx-auto w-full max-w-2xl px-4 sm:px-6 py-5 sm:py-6 pb-28">
     <!-- 標題列 -->
-    <div class="flex items-center gap-3 mb-4">
+    <div class="flex items-center gap-3 mb-5">
       <UButton
         color="neutral"
         variant="soft"
@@ -15,7 +15,7 @@
 
     <template v-if="selectedBookId">
       <!-- 被動上期結餘提示 -->
-      <div class="mb-4">
+      <div class="mb-5">
         <PreviousBalanceBanner :account-id="selectedBookId" />
       </div>
 
@@ -28,12 +28,15 @@
           v-for="tab in tabs"
           :key="tab.key"
           type="button"
-          class="flex-1 py-2 text-sm font-medium rounded-xl transition-all"
+          class="flex-1 flex items-center justify-center gap-1.5 py-2 text-sm font-semibold rounded-xl transition-all"
           :class="activeTab === tab.key
-            ? 'bg-white dark:bg-gray-900 shadow-sm text-primary-600'
-            : 'text-gray-500 hover:text-gray-700'"
+            ? 'bg-white dark:bg-gray-900 shadow-sm text-primary-600 dark:text-primary-400'
+            : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+          :aria-pressed="activeTab === tab.key"
           @click="activeTab = tab.key"
-        >{{ tab.label }}</button>
+        >
+          <UIcon :name="tab.icon" class="w-4 h-4" />{{ tab.label }}
+        </button>
       </div>
 
       <!-- 分頁內容 -->
@@ -72,7 +75,8 @@
       v-if="selectedBookId && accountBook"
       color="primary"
       icon="i-heroicons-plus"
-      class="fixed bottom-6 right-6 z-50 rounded-full w-14 h-14 flex items-center justify-center shadow-xl shadow-primary-500/30 text-2xl"
+      class="fixed z-50 rounded-full w-14 h-14 flex items-center justify-center shadow-xl shadow-primary-500/30 text-2xl transition-transform active:scale-95"
+      style="bottom: max(1.25rem, calc(env(safe-area-inset-bottom) + 0.75rem)); right: max(1.25rem, calc(50vw - 21rem))"
       aria-label="新增記帳"
       @click="openTransactionDialog('add')"
     />
@@ -97,9 +101,9 @@ const { user } = useAuth();
 
 // 分頁
 const tabs = [
-  { key: 'list' as const, label: '帳目' },
-  { key: 'stats' as const, label: '統計' },
-  { key: 'reconcile' as const, label: '對帳' },
+  { key: 'list' as const, label: '帳目', icon: 'i-lucide-list' },
+  { key: 'stats' as const, label: '統計', icon: 'i-lucide-chart-pie' },
+  { key: 'reconcile' as const, label: '對帳', icon: 'i-lucide-scale' },
 ];
 const activeTab = ref<'list' | 'stats' | 'reconcile'>('list');
 

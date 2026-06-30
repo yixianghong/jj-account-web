@@ -50,7 +50,7 @@
             : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-primary-300'"
           @click="form.category = category"
         >
-          <span>{{ categoryIcons[category] }}</span>{{ category }}
+          <UIcon :name="categoryIcons[category]" class="w-4 h-4" />{{ category }}
         </button>
       </div>
     </div>

@@ -1,10 +1,12 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto">
-      <h1 class="text-3xl font-bold mb-8">使用者設定</h1>
-      
-      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm p-6">
-        <h2 class="text-xl font-semibold mb-4">個人資料</h2>
+  <div class="mx-auto w-full max-w-2xl px-4 sm:px-6 py-6 sm:py-8 pb-20">
+    <div>
+      <h1 class="text-2xl font-extrabold tracking-tight mb-6">使用者設定</h1>
+
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-sm p-6">
+        <h2 class="text-base font-bold mb-4 flex items-center gap-2">
+          <UIcon name="i-lucide-user-round" class="w-4 h-4 text-primary-500" />個人資料
+        </h2>
 
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -41,8 +43,10 @@
       </div>
 
       <!-- 通知設定 -->
-      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-sm p-6 mt-6">
-        <h2 class="text-xl font-semibold mb-4">通知設定</h2>
+      <div class="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl shadow-sm p-6 mt-5">
+        <h2 class="text-base font-bold mb-4 flex items-center gap-2">
+          <UIcon name="i-lucide-bell" class="w-4 h-4 text-primary-500" />通知設定
+        </h2>
 
         <p v-if="!notifySupported" class="text-sm text-gray-500 leading-relaxed">
           此裝置或瀏覽器不支援推播通知。<br>
